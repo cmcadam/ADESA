@@ -1,3 +1,8 @@
 from django.contrib import admin
+from .models import Employee, Organisation, Audit, Report, Score
 
-# Register your models here.
+admin.site.register(Employee)
+admin.site.register(Organisation)
+admin.site.register(Audit)
+admin.site.register(Report)
+admin.site.register(Score)
