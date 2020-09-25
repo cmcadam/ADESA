@@ -13,5 +13,6 @@ class AddServerForm(ModelForm):
         if commit:
             server.save()
 
-class CustomForm(forms.Form):
-    slider = forms.BooleanField()
+class ServerCredentialsForm(forms.Form):
+    username = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput())

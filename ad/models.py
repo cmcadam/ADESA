@@ -25,7 +25,7 @@ class Score(models.Model):
 
 
 class Report(models.Model):
-    organisation = models.ForeignKey(Server, on_delete=models.CASCADE)
+    server = models.ForeignKey(Server, on_delete=models.CASCADE)
     score = models.ForeignKey(Score, on_delete=models.CASCADE)
     date_created = models.DateField()
     report_file = models.FileField()

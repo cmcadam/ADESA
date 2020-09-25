@@ -12,6 +12,11 @@
             <th>Share Report</th>
             <th>Shared With</th>
             <th>Save Reports</th>
+            <th>Save Server Details</th>
+            <th>Server IP Address</th>
+            <th>SSH Port </th>
+            <th>Edit </th>
+            <th>Delete </th>
         </tr>
         {% if servers|length == 0 %}
             <tr>
@@ -24,11 +29,16 @@
                 <td>{{ server.share_reports }}</td>
                 <td></td>
                 <td>{{ server.save_reports }}</td>
+                <td>{{ server.save_server_details }}</td>
+                <td>{{ server.server_address }}</td>
+                <td>{{ server.ssh_port }}</td>
+                <td><button class="btn btn-primary">Edit</button></td>
+                <td><button class="btn btn-danger">Remove</button></td>
+
             </tr>
             {% endfor %}
-
     </table>
-            <button></button>
+            <button><a href="{% url 'add_server' %}">Add Server</a></button>
         {% endif %}
 
     <form method="POST">

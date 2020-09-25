@@ -53,10 +53,12 @@ def execute_command(command, session):
     # print("stderr: {}".format(stderr.read()))
 
 
-def connect_to_server(server):
+def connect_to_server(server, username, password):
     ssh = paramiko.SSHClient()
-    username = os.environ['SERVER_USERNAME']
-    password = os.environ['SERVER_PASSWORD']
+    if os.getenv('SERVER_USERNAME') and os.getenv('SERVER_PASSWORD'):
+        print('found environment variables')
+        username = os.environ['SERVER_USERNAME']
+        password = os.environ['SERVER_PASSWORD']
     try:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(server, username=username, password=password)
@@ -68,14 +70,16 @@ def connect_to_server(server):
         print('Failed to connect to server')
         return
 
-if __name__=='__main__':
+# if __name__=='__main__':
+def get_ad_info(address, username, password):
     paramiko.util.log_to_file("paramiko.log")
 
     # dictionaries to store the results of the processed data from the server    
     ou_dict = {}
 
     print('Connecting to target server...')
-    session, ftp_client = connect_to_server('10.1.10.2')
+    session, ftp_client = connect_to_server(address, username, password)
+    # session, ftp_client = connect_to_server('10.1.10.2')
     print('Reading GPO\'s....')
 
     try:

@@ -11,7 +11,35 @@
                 <div class="card-header-tab card-header">
                     <h3>Internal Audits</h3>
                 </div>
-                <a href="#">Complete Audit</a>
+                <table>
+                    <tr>
+                        <th>Server Name</th>
+                        <th>Begin Audit</th>
+                    </tr>
+                    {% if servers|length == 0 %}
+                        <tr>
+                        <td colspan="4">You dont have any servers to audit! <a href="{% url 'add_server' %}">Add a server</a></td>
+                        </tr>
+                    {% else %}
+                        {% for server in servers %}
+                        <tr>
+                            <td>{{ server.name }}</td>
+
+                            <td>
+{#                                <form method="POST">#}
+{#                                    <label>Username</label>#}
+{#                                    <input type="text" name="username">#}
+{#                                    <label>Password</label>#}
+{#                                    <input type="password" name="password">#}
+{#                                    <button class="btn btn-primary" type="submit">Begin Audit</button>#}
+{#                                    <a class="btn btn-primary" href="{% url 'audit_details' server.id %}">Begin Audit</a>#}
+{#                                </form>#}
+                                <a class="btn btn-primary" href="{% url 'authorize_audit' server.id %}">Begin Audit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </table>
             </div>
         </div>
         <div class="col-md-6">
@@ -19,7 +47,24 @@
                 <div class="card-header-tab card-header">
                     <h3>3rd Party Audits/Reports</h3>
                 </div>
-               <a href="#">Review Audits</a>
+               <table>
+                    <tr>
+                        <th>Server Name</th>
+                        <th>View Report</th>
+                    </tr>
+                    {% if external_reports|length == 0 %}
+                        <tr>
+                        <td colspan="4">You dont have any 3rd party reports!</td>
+                        </tr>
+                    {% else %}
+                        {% for external_report in external_reports %}
+                        <tr>
+                            <td>{{ external_report.report.server.name }}</td>
+                            <td><button class="btn btn-primary">View</button></td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </table>
             </div>
         </div>
     </div>
