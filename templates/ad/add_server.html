@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block head_title %}
+    Add a Server
+{% endblock %}
+
+{% block content %}
+
+    <form method="POST">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit">Add Server</button>
+    </form>
+
+{% endblock %}

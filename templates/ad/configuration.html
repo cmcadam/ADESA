@@ -1,5 +1,48 @@
 {% extends 'base.html' %}
 
+{% block head_title %}
+    Server Configurations
+{% endblock %}
+
 {% block content %}
     <h1>Configurations</h1>
+    <table>
+        <tr>
+            <th>Server Name</th>
+            <th>Share Report</th>
+            <th>Shared With</th>
+            <th>Save Reports</th>
+        </tr>
+        {% if servers|length == 0 %}
+            <tr>
+            <td colspan="4">You dont have any servers! <a href="{% url 'add_server' %}">Add a server</a></td>
+            </tr>
+        {% else %}
+            {% for server in servers %}
+            <tr>
+                <td>{{ server.name }}</td>
+                <td>{{ server.share_reports }}</td>
+                <td></td>
+                <td>{{ server.save_reports }}</td>
+            </tr>
+            {% endfor %}
+
+    </table>
+            <button></button>
+        {% endif %}
+
+    <form method="POST">
+    {% csrf_token %}
+    {{ form }}
+    </form>
+
+{#    <form method="POST">#}
+{#    {% csrf_token %}#}
+{#        <label class="switch">#}
+{#            {{ custom_form.slider }}#}
+{#        <span class="slider round"></span>#}
+{#        </label>#}
+{#    </form>#}
+
+
 {% endblock %}

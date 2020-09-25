@@ -2,11 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class Organisation(models.Model):
+class Server(models.Model):
+    owner = models.ForeignKey(User, models.CASCADE)
     name = models.CharField(max_length=50)
     server_address = models.CharField(max_length=20)
     ssh_port = models.IntegerField(default=22)
-    server_username = models.CharField(max_length=50)
+    # server_username = models.CharField(max_length=50)
+    save_server_details = models.BooleanField(default=False)
+    save_reports = models.BooleanField(default=True)
+    share_reports = models.BooleanField(default=True)
 
 
 class Score(models.Model):
@@ -21,7 +25,7 @@ class Score(models.Model):
 
 
 class Report(models.Model):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    organisation = models.ForeignKey(Server, on_delete=models.CASCADE)
     score = models.ForeignKey(Score, on_delete=models.CASCADE)
     date_created = models.DateField()
     report_file = models.FileField()
@@ -32,8 +36,6 @@ class Audit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
-class Employee(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    save_reports = models.BooleanField(default=True)
-    save_credentials = models.BooleanField(default=True)
+# class Employee(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     server = models.ForeignKey(Server, on_delete=models.CASCADE)

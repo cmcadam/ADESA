@@ -1,5 +1,26 @@
 {% extends 'base.html' %}
 
+{% block head_title %}
+    AD Auditor
+{% endblock %}
+
 {% block content %}
-    <h1>Auditor</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3 card">
+                <div class="card-header-tab card-header">
+                    <h3>Internal Audits</h3>
+                </div>
+                <a href="#">Complete Audit</a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3 card">
+                <div class="card-header-tab card-header">
+                    <h3>3rd Party Audits/Reports</h3>
+                </div>
+               <a href="#">Review Audits</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}
