@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.http import HttpResponseBadRequest
+
 from .models import Server, Audit
 from .forms import AddServerForm, ServerCredentialsForm
 from .validators import validIPAddress
@@ -66,15 +68,20 @@ def authorize_audit(request, id):
             server = Server.objects.get(id=id)
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+            print(username, password)
             try:
                 messages.success(request, 'Audit complete')
                 get_ad_info(server.server_address, username, password)
             except:
                 messages.error(request, 'Unable to audit server')
-                return redirect('authorize_audit', id=id)
+                return HttpResponseBadRequest('This view can not handle method {0}'. \
+                                       format(request.method), status=403)
+                # messages.error(request, 'Unable to audit server')
+                # return redirect('authorize_audit', id=id)
 
     form = ServerCredentialsForm()
     context = {
-        'form': form
+        'form': form,
+        'server_id': id
     }
     return render(request, 'ad/server_credentials.html', context)

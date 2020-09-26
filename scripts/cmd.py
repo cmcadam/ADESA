@@ -67,8 +67,7 @@ def connect_to_server(server, username, password):
         ftp_client.mkdir('C:\\ADAudit')
         return ssh, ftp_client
     except:
-        print('Failed to connect to server')
-        return
+        raise ValueError('Failed to connect to server with credentials')
 
 # if __name__=='__main__':
 def get_ad_info(address, username, password):
@@ -78,7 +77,10 @@ def get_ad_info(address, username, password):
     ou_dict = {}
 
     print('Connecting to target server...')
-    session, ftp_client = connect_to_server(address, username, password)
+    try:
+        session, ftp_client = connect_to_server(address, username, password)
+    except:
+        raise ValueError('could not connect to the server')
     # session, ftp_client = connect_to_server('10.1.10.2')
     print('Reading GPO\'s....')
 
