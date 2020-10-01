@@ -3,7 +3,42 @@ import re
 import paramiko
 import xml.etree.ElementTree as ET
 
+from .report_dict import report_dict
+
 gpo_dict = {}
+
+
+def application_control_audit():
+    pass
+
+
+def patch_application_audit():
+    pass
+
+
+def office_macros_audit():
+    pass
+
+
+def application_hardening_audit():
+    pass
+
+
+def admin_privileges_audit():
+    pass
+
+
+def patch_os_audit():
+    pass
+
+
+def mfa_audit():
+    pass
+
+
+def backup_audit():
+    pass
+
 
 def clean_up_files(session, ftp_client):
     ftp_client.remove('C:\\ADAudit\\ou_info.txt')
@@ -15,13 +50,21 @@ def clean_up_files(session, ftp_client):
 
 # TODO view all the applied group policies
 def policy_auditor():
-    pass
+    application_control_audit()
+    patch_application_audit()
+    office_macros_audit()
+    application_hardening_audit()
+    admin_privileges_audit()
+    patch_os_audit()
+    mfa_audit()
+    backup_audit()
+
 
 def parse_xml():
     tree = ET.parse('gpo_report.xml')
     root = tree.getroot()
-    # for child in root:
-    #     print(child.tag, child.attrib)
+    for child in root:
+        print(child.tag, child.attrib)
 
     gpo_dict[root[1].text]=root[0][0].text
     print('Currently auditing GPO: {}'.format(root[1].text))
@@ -75,7 +118,6 @@ def get_ad_info(address, username, password):
 
     # dictionaries to store the results of the processed data from the server    
     ou_dict = {}
-
     print('Connecting to target server...')
     try:
         session, ftp_client = connect_to_server(address, username, password)
