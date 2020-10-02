@@ -7,33 +7,104 @@ from .report_dict import report_dict
 
 gpo_dict = {}
 
+# TODO
+def application_control_audit(root):
+    print('application control report')
 
-def application_control_audit():
-    pass
+    # user based policies at root[9][3], iterate on the 4th layer for GPO details
+    if int(root[9][0].text) == 0:
+        print('No user policies applied in this GPO')
+    else:
+        for i in range(0, len(root[9][3][0])):
+            if root[9][3][0][i][0].text == 'Run only specified Windows applications':
+                # iterate through each of the specified files
+                for j in range(0, len(root[9][3][0][i][5][4])):
+                    # check file type contains .exe
+
+                    # check file type contains .ps1
+
+                    # check file type contains .dll
+
+                    # check files match with microsoft block list
+                    print(root[9][3][0][i][5][4][j][0].text)
+            # else:
+            #     print(root[9][3][0][i][0].text)
 
 
 def patch_application_audit():
     pass
 
+# Working
+def office_macros_audit(root):
+    print('office macro report')
+    # user based policies at root[9][3], iterate on the 4th layer for GPO details
+    if int(root[9][0].text) == 0:
+        print('No user policies applied in this GPO')
+    else:
+        for i in range(0, len(root[9][3][0])):
+            if root[9][3][0][i][0].text == 'Disable Trust Bar Notification for unsigned application add-ins and block them':
+                print(root[9][3][0][i][0].text)
+            elif root[9][3][0][i][0].text == 'Automation Security':
+                print(root[9][3][0][i][0].text)
+            elif root[9][3][0][i][0].text == 'Block macros from running in Office files from the Internet':
+                print(root[9][3][0][i][0].text)
+            elif root[9][3][0][i][0].text == 'Allow mix of policy and user locations':
+                print(root[9][3][0][i][0].text)
 
-def office_macros_audit():
-    pass
+
+def application_hardening_audit(root):
+    print('application hardening report')
+    # computer based policies at root[8][3], iterate on the 4th layer for GPO details
+    if int(root[8][0].text) == 0:
+        print('No computer policies applied in this GPO')
+    else:
+        # locate the policies for blocking pop ups and java
+        for name in root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
+                                 '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
+                                 '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
+                                 '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Policy/'
+                                 '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Name'
+                                 ):
+            if name.text == 'Block popups':
+                print(name.text)
+            elif name.text == 'Java permissions':
+                print(name.text)
+            elif name.text == 'Turn off Adobe Flash in Internet Explorer and prevent applications from using Internet Explorer technology to instantiate Flash objects':
+                print(name.text)
+
+        # this is a registry key
+        #     elif root[8][3][0][i][0].text == 'Block Flash activation in Office documents':
+        #         print(root[8][3][0][i][0].text)
 
 
-def application_hardening_audit():
-    pass
 
+def admin_privileges_audit(root):
+    for name in root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
+                             '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
+                             '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
+                             '{http://www.microsoft.com/GroupPolicy/Settings/Auditing}AuditSetting/'
+                             '{http://www.microsoft.com/GroupPolicy/Settings/Auditing}SubcategoryName'):
+        if name.text == 'Audit Other Privilege Use Events':
+            print(name.text)
+        elif name.text == 'Audit Sensitive Privilege Use':
+            print(name.text)
 
-def admin_privileges_audit():
-    pass
+        # TODO test for existence of a web proxy
 
 
 def patch_os_audit():
     pass
 
 
-def mfa_audit():
-    pass
+def mfa_audit(root):
+    print('mfa report')
+    # computer based policies at root[8][3], iterate on the 4th layer for GPO details
+    if int(root[8][0].text) == 0:
+        print('No user policies applied in this GPO')
+    else:
+        for i in range(0, len(root[8][3][0])):
+            if root[8][3][0][i][0].text == 'Client: Limit Two-Factor to RDP Logons Only':
+                print(root[8][3][0][i][0].text)
 
 
 def backup_audit():
@@ -44,8 +115,8 @@ def clean_up_files(session, ftp_client):
     ftp_client.remove('C:\\ADAudit\\ou_info.txt')
     ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
     ftp_client.rmdir('C:\\ADAudit')
-    os.remove('gpo_guids.txt')
-    os.remove('gpo_report.xml')
+    # os.remove('gpo_guids.txt')
+    # os.remove('gpo_report.xml')
     ftp_client.close()
 
 # TODO view all the applied group policies
@@ -63,25 +134,34 @@ def policy_auditor():
 def parse_xml():
     tree = ET.parse('gpo_report.xml')
     root = tree.getroot()
-    for child in root:
-        print(child.tag, child.attrib)
+    # for child in root:
+    #     print(child.tag, child.attrib)
 
     gpo_dict[root[1].text]=root[0][0].text
     print('Currently auditing GPO: {}'.format(root[1].text))
 
+    application_control_audit(root)
+    office_macros_audit(root)
+    application_hardening_audit(root)
+
+    mfa_audit(root)
+
     # computer based policies at root[8][3], iterate on the 4th layer for GPO details
-    if int(root[8][0].text) == 0:
-        print('No computer policies applied in this GPO')
-    else:
-        for i in range(0, len(root[8][3][0])):
-            print(root[8][3][0][i][0].text)
+    # if int(root[8][0].text) == 0:
+    #     print('No computer policies applied in this GPO')
+    # else:
+    #     for i in range(0, len(root[8][3][0])):
+    #         print(root[8][3][0][i][0].text)
 
     # user based policies at root[9][3], iterate on the 4th layer for GPO details
-    if int(root[9][0].text) == 0:
-        print('No user policies applied in this GPO')
-    else:
-        for i in range(0, len(root[9][3][0])):
-            print(root[9][3][0][i][0].text)
+    # if int(root[9][0].text) == 0:
+    #     print('No user policies applied in this GPO')
+    # else:
+    #     for i in range(0, len(root[9][3][0])):
+    #         if root[9][3][0][i][0].text == 'Run only specified Windows applications':
+    #             print(root[9][3][0][i][5][4][0][0].text)
+    #         else:
+    #             print(root[9][3][0][i][0].text)
 
 
 

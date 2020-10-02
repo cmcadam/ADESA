@@ -229,7 +229,7 @@ report_dict = {
             },
             'Control 3': {
                 'Control Name': 'Web browsers are configured to block Java from the internet.',
-                'Policy Name': 'Disable Java',
+                'Policy Name': 'Java permissions',
                 'Policy Location': 'Computer Configuration > Administrative Templates > Windows Components > Internet Explorer > Internet Control Panel > Security Page > Locked-Down Trusted Sites Zone',
                 'Policy Script': None,
                 'Policy Actions': 'Disable java through GPO.',
@@ -255,7 +255,7 @@ report_dict = {
             },
             'Control 3': {
                 'Control Name': 'Web browsers are configured to block Java from the internet.',
-                'Policy Name': 'Disable Java' ,
+                'Policy Name': 'Java permissions',
                 'Policy Location': 'Computer Configuration > Administrative Templates > Windows Components > Internet Explorer > Internet Control Panel > Security Page > Locked-Down Trusted Sites Zone',
                 'Policy Script': None,
                 'Policy Actions': 'Disable java through GPO.',
