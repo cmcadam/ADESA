@@ -3919,3 +3919,4 @@ DEB [20201002-16:54:21.777] thr=2   paramiko.transport.sftp: [chan 0] rmdir(b'C:
 INF [20201002-16:54:21.777] thr=2   paramiko.transport.sftp: [chan 0] sftp session closed.
 DEB [20201002-16:54:21.777] thr=2   paramiko.transport: [chan 0] EOF sent (0)
 DEB [20201002-16:54:21.779] thr=1   paramiko.transport: [chan 0] EOF received (0)
+DEB [20201002-16:55:20.776] thr=1   paramiko.transport: EOF in transport thread
