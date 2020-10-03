@@ -69,14 +69,14 @@ def authorize_audit(request, id):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             print(username, password)
-            try:
-                messages.success(request, 'Audit complete')
-                get_ad_info(server.server_address, username, password)
-                return redirect('authorize_audit', id=id)
-            except:
-                messages.error(request, 'Unable to audit server')
-                return HttpResponseBadRequest('This view can not handle method {0}'. \
-                                       format(request.method), status=403)
+            # try:
+            messages.success(request, 'Audit complete')
+            get_ad_info(server.server_address, username, password)
+            return redirect('authorize_audit', id=id)
+            # except:
+            #     messages.error(request, 'Unable to audit server')
+            #     return HttpResponseBadRequest('This view can not handle method {0}'. \
+            #                            format(request.method), status=403)
                 # messages.error(request, 'Unable to audit server')
                 # return redirect('authorize_audit', id=id)
 

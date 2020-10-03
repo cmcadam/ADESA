@@ -3,37 +3,67 @@ import re
 import paramiko
 import xml.etree.ElementTree as ET
 
-from .report_dict import report_dict
+from report_dict import REPORT_DICT
 
+current_report_result = REPORT_DICT
 gpo_dict = {}
 
 # TODO
 def application_control_audit(root):
     print('application control report')
 
+    # create the flags for the file extensions
+    exe_flag = 0
+    ps1_flag = 0
+    dll_flag = 0
+
+    block_list_count = 0
+
     # user based policies at root[9][3], iterate on the 4th layer for GPO details
     if int(root[9][0].text) == 0:
         print('No user policies applied in this GPO')
     else:
+
+        file_list = []
+        f = open('ms_block_list.txt', 'r')
+        lines = f.readlines()
+        for line in lines:
+            file_list.append(line.strip('\n'))
+
         for i in range(0, len(root[9][3][0])):
             if root[9][3][0][i][0].text == 'Run only specified Windows applications':
                 # iterate through each of the specified files
                 for j in range(0, len(root[9][3][0][i][5][4])):
                     # check file type contains .exe
-
+                    if '.exe' in root[9][3][0][i][5][4][j][0].text:
+                        exe_flag = 1
                     # check file type contains .ps1
-
+                    if '.ps1' in root[9][3][0][i][5][4][j][0].text:
+                        ps1_flag = 1
                     # check file type contains .dll
-
+                    if '.dll' in root[9][3][0][i][5][4][j][0].text:
+                        dll_flag = 1
                     # check files match with microsoft block list
-                    print(root[9][3][0][i][5][4][j][0].text)
-            # else:
-            #     print(root[9][3][0][i][0].text)
+                    if root[9][3][0][i][5][4][j][0].text in file_list:
+                        block_list_count += 1
+
+        # Update result dictionary
+        if exe_flag == 1:
+            pass
+        elif exe_flag and ps1_flag == 1:
+            pass
+        elif exe_flag and ps1_flag and dll_flag == 1:
+            pass
+        elif block_list_count == len(file_list):
+            pass
 
 
-def patch_application_audit(root, session, ftp_client):
+def patch_application_audit(session, ftp_client):
+    print('Patch Applications Audit')
     # TODO fix command and add logic once file is read
-    execute_command('powershell ^| Out-String -Width 10000 > C:\\ADAudit\\application_patching_info.txt', session)
+    execute_command('powershell (Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt', session)
+    execute_command('powershell Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
+                    session)
     getfile('C:\\ADAudit\\application_patching_info.txt', 'application_patching_info.txt', session, ftp_client)
 
     with open('application_patching_info.txt') as f:
@@ -43,7 +73,7 @@ def patch_application_audit(root, session, ftp_client):
 
 # Working
 def office_macros_audit(root):
-    print('office macro report')
+    print('Office macro report')
     # user based policies at root[9][3], iterate on the 4th layer for GPO details
     if int(root[9][0].text) == 0:
         print('No user policies applied in this GPO')
@@ -86,6 +116,7 @@ def application_hardening_audit(root):
 
 
 def admin_privileges_audit(root):
+    print('Admin Privileges Audit')
     for name in root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
                              '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
                              '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
@@ -99,12 +130,23 @@ def admin_privileges_audit(root):
         # TODO test for existence of a web proxy
 
 
-def patch_os_audit(root, session, ftp_client):
-    # TODO fix command and add logic once file is read
-    execute_command('powershell ^| Out-String -Width 10000 > C:\\ADAudit\\os_patching_info.txt', session)
+def patch_os_audit(session, ftp_client):
+    print('Patch OS Audit')
+    # Read the servers operating system
+    execute_command('powershell (Get-CimInstance Win32_OperatingSystem).version > C:\\ADAudit\\os_patching_info.txt', session)
     getfile('C:\\ADAudit\\os_patching_info.txt', 'os_patching_info.txt', session, ftp_client)
 
     with open('os_patching_info.txt') as f:
+        lines = f.readlines()
+        for i in range(0, len(lines)):
+            print(lines[i])
+
+    # Get info for all the client computers operating systems
+    execute_command('powershell Get-ADComputer -Filter * -Property * ^| Format-Table Name,OperatingSystem,OperatingSystemVersion> C:\\ADAudit\\client_os_info.txt',
+                    session)
+    getfile('C:\\ADAudit\\client_os_info.txt', 'client_os_info.txt', session, ftp_client)
+
+    with open('client_os_info.txt') as f:
         lines = f.readlines()
         for i in range(0, len(lines)):
             print(lines[i])
@@ -121,9 +163,11 @@ def mfa_audit(root):
                 print(root[8][3][0][i][0].text)
 
 
-def backup_audit(root, session, ftp_client):
+def backup_audit(session, ftp_client):
+    print('Backup Audit')
     # TODO fix command and add logic once file is read
-    execute_command('powershell ^| Out-String -Width 10000 > C:\\ADAudit\\backup_info.txt', session)
+    # Get all backup information on the server
+    execute_command('powershell WBAdmin ENABLE BACKUP > C:\\ADAudit\\backup_info.txt', session)
     getfile('C:\\ADAudit\\backup_info.txt', 'backup_info.txt', session, ftp_client)
 
     with open('backup_info.txt') as f:
@@ -131,16 +175,51 @@ def backup_audit(root, session, ftp_client):
         for i in range(0, len(lines)):
             print(lines[i])
 
+    execute_command('powershell WBAdmin GET VERSIONS > C:\\ADAudit\\backup_files.txt', session)
+    getfile('C:\\ADAudit\\backup_files.txt', 'backup_files.txt', session, ftp_client)
 
-def clean_up_files(session, ftp_client):
+    with open('backup_files.txt') as f:
+        lines = f.readlines()
+        for i in range(0, len(lines)):
+            print(lines[i])
+
+    # Get info of all running vms on the server
+
+    # TODO make sure this file doesnt return blank
+    # execute_command('powershell Get-VM *> C:\\ADAudit\\vm_info.txt', session)
+    # getfile('C:\\ADAudit\\vm_info.txt', 'vm_info.txt', session, ftp_client)
+    #
+    # with open('vm_info.txt') as f:
+    #     lines = f.readlines()
+    #     for i in range(0, len(lines)):
+    #         print(lines[i])
+
+
+def clean_up_files(ftp_client):
+    # remove all the files from the server
     ftp_client.remove('C:\\ADAudit\\ou_info.txt')
     ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
+    ftp_client.remove('C:\\ADAudit\\application_patching_info.txt')
+    ftp_client.remove('C:\\ADAudit\\backup_files.txt')
+    ftp_client.remove('C:\\ADAudit\\backup_info.txt')
+    ftp_client.remove('C:\\ADAudit\\os_patching_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\vm_info.txt')
+    ftp_client.remove('C:\\ADAudit\\client_os_info.txt')
+    ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
     ftp_client.rmdir('C:\\ADAudit')
-    # os.remove('gpo_guids.txt')
-    # os.remove('gpo_report.xml')
+
+    # remove all the files from the server the script is running on
+    os.remove('gpo_guids.txt')
+    os.remove('gpo_report.xml')
+    os.remove('backup_files.txt')
+    os.remove('application_patching_info.txt')
+    os.remove('backup_info.txt')
+    os.remove('os_patching_info.txt')
+    # os.remove('vm_info.txt')
+    os.remove('client_os_info.txt')
     ftp_client.close()
 
-def parse_xml(session, ftp_client):
+def parse_xml():
     tree = ET.parse('gpo_report.xml')
     root = tree.getroot()
     # for child in root:
@@ -149,36 +228,17 @@ def parse_xml(session, ftp_client):
     gpo_dict[root[1].text]=root[0][0].text
     print('Currently auditing GPO: {}'.format(root[1].text))
 
+    # Audit categories run once per GPO applied to the server
     application_control_audit(root)
-    patch_application_audit(root, session, ftp_client)
     office_macros_audit(root)
     application_hardening_audit(root)
     admin_privileges_audit(root)
-    patch_os_audit(root, session, ftp_client)
     mfa_audit(root)
-    backup_audit(root, session, ftp_client)
-
-    # computer based policies at root[8][3], iterate on the 4th layer for GPO details
-    # if int(root[8][0].text) == 0:
-    #     print('No computer policies applied in this GPO')
-    # else:
-    #     for i in range(0, len(root[8][3][0])):
-    #         print(root[8][3][0][i][0].text)
-
-    # user based policies at root[9][3], iterate on the 4th layer for GPO details
-    # if int(root[9][0].text) == 0:
-    #     print('No user policies applied in this GPO')
-    # else:
-    #     for i in range(0, len(root[9][3][0])):
-    #         if root[9][3][0][i][0].text == 'Run only specified Windows applications':
-    #             print(root[9][3][0][i][5][4][0][0].text)
-    #         else:
-    #             print(root[9][3][0][i][0].text)
-
 
 
 def getfile(filepath, local_filename, session, ftp_client):
     ftp_client.get(filepath, local_filename)
+
 
 def execute_command(command, session):
     stdin, stdout, stderr = session.exec_command(command)
@@ -249,10 +309,17 @@ def get_ad_info(address, username, password):
             execute_command('powershell Get-GPOReport -GUID {} -ReportType XML -Path C:\\ADAudit\\GPOReport.xml'.format(gpo_guid), session)
             # get report file off the server
             getfile('C:\\ADAudit\\GPOReport.xml', 'gpo_report.xml', session, ftp_client)
-            parse_xml(session, ftp_client)
+            parse_xml()
+
+
+    # Audit categories that get run once per audit
+    patch_application_audit(session, ftp_client)
+    patch_os_audit(session, ftp_client)
+    backup_audit(session, ftp_client)
+
     
     # parse_xml()
     print(gpo_dict)
 
     # clean up all the files created on the server to ensure that sensitive AD info is never leaked
-    clean_up_files(session, ftp_client)
+    clean_up_files(ftp_client)

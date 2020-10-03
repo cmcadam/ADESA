@@ -1,24 +1,29 @@
 import xml.etree.ElementTree as ET
+from report_dict import REPORT_DICT
 
 if __name__ == '__main__':
-    tree = ET.parse('gpo_report.xml')
-    root = tree.getroot()
+    # tree = ET.parse('gpo_report.xml')
+    # root = tree.getroot()
+
+    print(REPORT_DICT['Application Control'])
+
+
     # for child in root:
     #     print(child.tag, child.attrib)
 
-    print(root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
-                       '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
-                       '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
-                       '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Policy/'
-                       '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Name'
-                       ))
-    for name in root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
-                       '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
-                       '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
-                       '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Policy/'
-                       '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Name'
-                    ):
-        print(name.text)
+    # print(root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
+    #                    '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
+    #                    '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
+    #                    '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Policy/'
+    #                    '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Name'
+    #                    ))
+    # for name in root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
+    #                    '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
+    #                    '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
+    #                    '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Policy/'
+    #                    '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Name'
+    #                 ):
+    #     print(name.text)
     # print(root.findall('.//*AuditSetting/PolicyTarget'))
 
     # Location of registry keys

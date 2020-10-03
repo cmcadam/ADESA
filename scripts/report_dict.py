@@ -1,4 +1,4 @@
-report_dict = {
+REPORT_DICT = {
     'Application Control': {
         'Maturity Level 1': {
             'Control 1': {
