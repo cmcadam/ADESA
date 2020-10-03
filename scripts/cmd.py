@@ -31,7 +31,7 @@ def application_control_audit(root):
             #     print(root[9][3][0][i][0].text)
 
 
-def patch_application_audit():
+def patch_application_audit(root):
     pass
 
 # Working
@@ -92,8 +92,11 @@ def admin_privileges_audit(root):
         # TODO test for existence of a web proxy
 
 
-def patch_os_audit():
-    pass
+def patch_os_audit(root, session, ftp_client):
+    execute_command(
+        'powershell Get-ADOrganizationalUnit -Filter \'Name -like \\"*\\"\' ^| Format-Table Name, LinkedGroupPolicyObjects -A ^| Out-String -Width 10000 > C:\\ADAudit\\ou_info.txt',
+        session)
+    getfile('C:\\ADAudit\\ou_info.txt', 'gpo_guids.txt', session, ftp_client)
 
 
 def mfa_audit(root):
@@ -107,7 +110,7 @@ def mfa_audit(root):
                 print(root[8][3][0][i][0].text)
 
 
-def backup_audit():
+def backup_audit(root, session, ftp_client):
     pass
 
 
@@ -119,19 +122,7 @@ def clean_up_files(session, ftp_client):
     # os.remove('gpo_report.xml')
     ftp_client.close()
 
-# TODO view all the applied group policies
-def policy_auditor():
-    application_control_audit()
-    patch_application_audit()
-    office_macros_audit()
-    application_hardening_audit()
-    admin_privileges_audit()
-    patch_os_audit()
-    mfa_audit()
-    backup_audit()
-
-
-def parse_xml():
+def parse_xml(session, ftp_client):
     tree = ET.parse('gpo_report.xml')
     root = tree.getroot()
     # for child in root:
@@ -141,10 +132,13 @@ def parse_xml():
     print('Currently auditing GPO: {}'.format(root[1].text))
 
     application_control_audit(root)
+    patch_application_audit(root)
     office_macros_audit(root)
     application_hardening_audit(root)
-
+    admin_privileges_audit(root)
+    patch_os_audit(root, session, ftp_client)
     mfa_audit(root)
+    backup_audit(root, session, ftp_client)
 
     # computer based policies at root[8][3], iterate on the 4th layer for GPO details
     # if int(root[8][0].text) == 0:
@@ -237,7 +231,7 @@ def get_ad_info(address, username, password):
             execute_command('powershell Get-GPOReport -GUID {} -ReportType XML -Path C:\\ADAudit\\GPOReport.xml'.format(gpo_guid), session)
             # get report file off the server
             getfile('C:\\ADAudit\\GPOReport.xml', 'gpo_report.xml', session, ftp_client)
-            parse_xml()
+            parse_xml(session, ftp_client)
     
     # parse_xml()
     print(gpo_dict)
