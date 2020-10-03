@@ -31,8 +31,15 @@ def application_control_audit(root):
             #     print(root[9][3][0][i][0].text)
 
 
-def patch_application_audit(root):
-    pass
+def patch_application_audit(root, session, ftp_client):
+    # TODO fix command and add logic once file is read
+    execute_command('powershell ^| Out-String -Width 10000 > C:\\ADAudit\\application_patching_info.txt', session)
+    getfile('C:\\ADAudit\\application_patching_info.txt', 'application_patching_info.txt', session, ftp_client)
+
+    with open('application_patching_info.txt') as f:
+        lines = f.readlines()
+        for i in range(0, len(lines)):
+            print(lines[i])
 
 # Working
 def office_macros_audit(root):
@@ -93,10 +100,14 @@ def admin_privileges_audit(root):
 
 
 def patch_os_audit(root, session, ftp_client):
-    execute_command(
-        'powershell Get-ADOrganizationalUnit -Filter \'Name -like \\"*\\"\' ^| Format-Table Name, LinkedGroupPolicyObjects -A ^| Out-String -Width 10000 > C:\\ADAudit\\ou_info.txt',
-        session)
-    getfile('C:\\ADAudit\\ou_info.txt', 'gpo_guids.txt', session, ftp_client)
+    # TODO fix command and add logic once file is read
+    execute_command('powershell ^| Out-String -Width 10000 > C:\\ADAudit\\os_patching_info.txt', session)
+    getfile('C:\\ADAudit\\os_patching_info.txt', 'os_patching_info.txt', session, ftp_client)
+
+    with open('os_patching_info.txt') as f:
+        lines = f.readlines()
+        for i in range(0, len(lines)):
+            print(lines[i])
 
 
 def mfa_audit(root):
@@ -111,7 +122,14 @@ def mfa_audit(root):
 
 
 def backup_audit(root, session, ftp_client):
-    pass
+    # TODO fix command and add logic once file is read
+    execute_command('powershell ^| Out-String -Width 10000 > C:\\ADAudit\\backup_info.txt', session)
+    getfile('C:\\ADAudit\\backup_info.txt', 'backup_info.txt', session, ftp_client)
+
+    with open('backup_info.txt') as f:
+        lines = f.readlines()
+        for i in range(0, len(lines)):
+            print(lines[i])
 
 
 def clean_up_files(session, ftp_client):
@@ -132,7 +150,7 @@ def parse_xml(session, ftp_client):
     print('Currently auditing GPO: {}'.format(root[1].text))
 
     application_control_audit(root)
-    patch_application_audit(root)
+    patch_application_audit(root, session, ftp_client)
     office_macros_audit(root)
     application_hardening_audit(root)
     admin_privileges_audit(root)
