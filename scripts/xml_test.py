@@ -5,8 +5,11 @@ if __name__ == '__main__':
     # tree = ET.parse('gpo_report.xml')
     # root = tree.getroot()
 
-    print(REPORT_DICT['Application Control'])
+    # print(REPORT_DICT['Application Control'])
 
+    for maturity_level in REPORT_DICT['Application Control']:
+        for control in REPORT_DICT['Application Control'][maturity_level]:
+            print(REPORT_DICT['Application Control'][maturity_level][control]['Control Name'])
 
     # for child in root:
     #     print(child.tag, child.attrib)

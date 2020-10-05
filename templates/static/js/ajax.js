@@ -15,8 +15,10 @@ function ad_auditor() {
         complete: function(){
             $('#loader').hide();
         },
-        success : function() {
+        success : function(data) {
+            console.log(data);
             console.log('succcesss');
+            window.location = 'http://127.0.0.1:8000/ad/dashboard';
         },
         error : function() {
             console.log('errors');

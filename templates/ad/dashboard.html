@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block content %}
+    {% if result_dict is not None %}
     <h1>Dashboard</h1>
     <hr>
     <h3>Summary</h3>
@@ -75,4 +76,7 @@
             </div>
         </div>
     </div>
+    {% else %}
+        <p>You dont have any report to view! <a href="#">click here to add a server and start reporting</a></p>
+    {% endif %}
 {% endblock %}

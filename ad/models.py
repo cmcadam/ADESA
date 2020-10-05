@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from jsonfield import JSONField
+
 
 class Server(models.Model):
     owner = models.ForeignKey(User, models.CASCADE)
@@ -26,14 +28,18 @@ class Score(models.Model):
 
 class Report(models.Model):
     server = models.ForeignKey(Server, on_delete=models.CASCADE)
-    score = models.ForeignKey(Score, on_delete=models.CASCADE)
-    date_created = models.DateField()
+    # score = models.ForeignKey(Score, on_delete=models.CASCADE)
+    json_report = JSONField()
+    date_created = models.DateTimeField(auto_now_add=True)
     report_file = models.FileField()
 
 
 class Audit(models.Model):
     report = models.ForeignKey(Report, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class TestClass(models.Model):
+    test = JSONField()
 
 
 # class Employee(models.Model):

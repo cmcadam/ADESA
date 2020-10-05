@@ -3,12 +3,12 @@ import re
 import paramiko
 import xml.etree.ElementTree as ET
 
-from report_dict import REPORT_DICT
+from scripts.report_dict import REPORT_DICT
 
 current_report_result = REPORT_DICT
 gpo_dict = {}
 
-# TODO
+
 def application_control_audit(root):
     print('application control report')
 
@@ -49,27 +49,30 @@ def application_control_audit(root):
 
         # Update result dictionary
         if exe_flag == 1:
-            pass
-        elif exe_flag and ps1_flag == 1:
-            pass
-        elif exe_flag and ps1_flag and dll_flag == 1:
-            pass
-        elif block_list_count == len(file_list):
-            pass
+            current_report_result['Application Control']['Maturity Level 1']['Control 1']['Policy Score'] = 1
+            current_report_result['Application Control']['Maturity Level 1']['Control 2']['Policy Score'] = 1
+        if exe_flag and ps1_flag == 1:
+            current_report_result['Application Control']['Maturity Level 2']['Control 1']['Policy Score'] = 1
+            current_report_result['Application Control']['Maturity Level 2']['Control 2']['Policy Score'] = 1
+        if exe_flag and ps1_flag and dll_flag == 1:
+            current_report_result['Application Control']['Maturity Level 3']['Control 1']['Policy Score'] = 1
+            current_report_result['Application Control']['Maturity Level 3']['Control 2']['Policy Score'] = 1
+        if block_list_count == len(file_list):
+            current_report_result['Application Control']['Maturity Level 3']['Control 3']['Policy Score'] = 1
 
 
-def patch_application_audit(session, ftp_client):
-    print('Patch Applications Audit')
-    # TODO fix command and add logic once file is read
-    execute_command('powershell (Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt', session)
-    execute_command('powershell Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
-                    session)
-    getfile('C:\\ADAudit\\application_patching_info.txt', 'application_patching_info.txt', session, ftp_client)
-
-    with open('application_patching_info.txt') as f:
-        lines = f.readlines()
-        for i in range(0, len(lines)):
-            print(lines[i])
+# def patch_application_audit(session, ftp_client):
+#     print('Patch Applications Audit')
+#     # TODO fix command and add logic once file is read
+#     execute_command('powershell (Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt', session)
+#     execute_command('powershell Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
+#                     session)
+#     getfile('C:\\ADAudit\\application_patching_info.txt', 'application_patching_info.txt', session, ftp_client)
+#
+#     with open('application_patching_info.txt') as f:
+#         lines = f.readlines()
+#         for i in range(0, len(lines)):
+#             print(lines[i])
 
 # Working
 def office_macros_audit(root):
@@ -197,22 +200,24 @@ def backup_audit(session, ftp_client):
 
 def clean_up_files(ftp_client):
     # remove all the files from the server
+    time.sleep(1)
     ftp_client.remove('C:\\ADAudit\\ou_info.txt')
     ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
-    ftp_client.remove('C:\\ADAudit\\application_patching_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\application_patching_info.txt')
     ftp_client.remove('C:\\ADAudit\\backup_files.txt')
     ftp_client.remove('C:\\ADAudit\\backup_info.txt')
     ftp_client.remove('C:\\ADAudit\\os_patching_info.txt')
     # ftp_client.remove('C:\\ADAudit\\vm_info.txt')
     ftp_client.remove('C:\\ADAudit\\client_os_info.txt')
-    ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
+    # ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
     ftp_client.rmdir('C:\\ADAudit')
 
+    time.sleep(1)
     # remove all the files from the server the script is running on
     os.remove('gpo_guids.txt')
     os.remove('gpo_report.xml')
     os.remove('backup_files.txt')
-    os.remove('application_patching_info.txt')
+    # os.remove('application_patching_info.txt')
     os.remove('backup_info.txt')
     os.remove('os_patching_info.txt')
     # os.remove('vm_info.txt')
@@ -241,11 +246,8 @@ def getfile(filepath, local_filename, session, ftp_client):
 
 
 def execute_command(command, session):
-    stdin, stdout, stderr = session.exec_command(command)
+    session.exec_command(command)
     time.sleep(5)
-    # print("stdin: {}".format(stdin.read()))
-    # print("stdout: {}".format(stdout.read()))
-    # print("stderr: {}".format(stderr.read()))
 
 
 def connect_to_server(server, username, password):
@@ -313,13 +315,16 @@ def get_ad_info(address, username, password):
 
 
     # Audit categories that get run once per audit
-    patch_application_audit(session, ftp_client)
+    # patch_application_audit(session, ftp_client)
     patch_os_audit(session, ftp_client)
     backup_audit(session, ftp_client)
 
     
     # parse_xml()
     print(gpo_dict)
+    print(current_report_result)
 
     # clean up all the files created on the server to ensure that sensitive AD info is never leaked
     clean_up_files(ftp_client)
+
+    return current_report_result
