@@ -279,7 +279,7 @@ REPORT_DICT = {
             # }
         }
     },
-    'Restrict Administrative Privilages': {
+    'Restrict Administrative Privileges': {
         'Maturity Level 1': {
             'Control 1': {
                 'Control Name': 'Privileged access to systems, applications and information is validated when first requested.',

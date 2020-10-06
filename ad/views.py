@@ -7,7 +7,7 @@ from .models import Server, Audit, Report, TestClass
 from .forms import AddServerForm, ServerCredentialsForm
 from .validators import validIPAddress
 
-from scripts.cmd import get_ad_info
+from scripts.reporter import get_ad_info
 
 
 def auditor(request):
@@ -35,13 +35,13 @@ def dashboard(request):
     for server in servers:
         result = Report.objects.filter(server_id=server.id).order_by('-date_created').first()
 
-    if result is not None:
-        # Iterate through the report to get all the scores and details
-        for category in result.json_report:
-            for maturity_level in result.json_report[category]:
-                for control in result.json_report[category][maturity_level]:
-                    for details in result.json_report[category][maturity_level][control]:
-                        print(details, result.json_report[category][maturity_level][control][details])
+    # if result is not None:
+    #     # Iterate through the report to get all the scores and details
+    #     for category in result.json_report:
+    #         for maturity_level in result.json_report[category]:
+    #             for control in result.json_report[category][maturity_level]:
+    #                 for details in result.json_report[category][maturity_level][control]:
+    #                     print(details, result.json_report[category][maturity_level][control][details])
 
     context = {
         'result_dict': result
@@ -71,7 +71,7 @@ def audit_details(request, id):
     context = {}
     return render(request, 'ad/audit_details.html', context)
 
-# TODO post form data to new endpoint using ajax
+
 def authorize_audit(request, id):
     if request.method == 'POST':
         form = ServerCredentialsForm(request.POST)
@@ -80,18 +80,18 @@ def authorize_audit(request, id):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
 
-            try:
-                messages.success(request, 'Audit complete')
-                result_dict = get_ad_info(server.server_address, username, password)
-                TestClass.objects.create(test=result_dict)
-                Report.objects.create(
-                    server_id=server.id,
-                    json_report=result_dict,
-                )
-            except:
-                messages.error(request, 'Unable to audit server')
-                return HttpResponseBadRequest('This view can not handle method {0}'. \
-                                       format(request.method), status=403)
+            # try:
+            messages.success(request, 'Audit complete')
+            result_dict = get_ad_info(server.server_address, username, password)
+            TestClass.objects.create(test=result_dict)
+            Report.objects.create(
+                server_id=server.id,
+                json_report=result_dict,
+            )
+            # except:
+            #     messages.error(request, 'Unable to audit server')
+            #     return HttpResponseBadRequest('This view can not handle method {0}'. \
+            #                            format(request.method), status=403)
 
     form = ServerCredentialsForm()
     context = {

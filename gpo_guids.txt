@@ -1,0 +1,8 @@
+
+Name               LinkedGroupPolicyObjects                                                                                                                                                                                                                                                                                                                        
+----               ------------------------                                                                                                                                                                                                                                                                                                                        
+Domain Controllers {CN={6AC1786C-016F-11D2-945F-00C04fB984F9},CN=Policies,CN=System,DC=e8thesis,DC=com}                                                                                                                                                                                                                                                            
+Test OU            {cn={314A4323-0EF8-4A45-9CE4-FF15C4CC0721},cn=policies,cn=system,DC=e8thesis,DC=com, cn={524B6CF8-ADA9-41A0-BBD0-FE3CC09FB3BB},cn=policies,cn=system,DC=e8thesis,DC=com, cn={BC345053-2266-4AFC-8D3E-F5CF9C0DBF08},cn=policies,cn=system,DC=e8thesis,DC=com, cn={338D1C3E-CE01-435F-8B0B-CE7036E5FABE},cn=policies,cn=system,DC=e8thesis,DC=com}
+
+
+

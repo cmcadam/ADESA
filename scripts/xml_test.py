@@ -7,9 +7,24 @@ if __name__ == '__main__':
 
     # print(REPORT_DICT['Application Control'])
 
-    for maturity_level in REPORT_DICT['Application Control']:
-        for control in REPORT_DICT['Application Control'][maturity_level]:
-            print(REPORT_DICT['Application Control'][maturity_level][control]['Control Name'])
+
+    # with open('../client_os_info.txt', encoding='utf-16', errors='ignore') as f:
+    #     lines = f.readlines()
+    #     for i in range(3, len(lines)):
+    #         if lines[i].strip('\n').strip().split(' ')[0] != '':
+    #             os_version = float(lines[i].strip('\n').strip().split(' ')[-2])
+    #             print(os_version)
+    # with open('../os_patching_info.txt', encoding='utf-16', errors='ignore') as f:
+    #     lines = f.readlines()
+    #     for i in range(0, len(lines)):
+    #         print(lines[i].strip('\n'))
+
+    with open('../proxy_info.txt', encoding='utf-16', errors='ignore') as f:
+        lines = f.readlines()
+        print(int(lines[3].strip('\n').strip()))
+    # for maturity_level in REPORT_DICT['Application Control']:
+    #     for control in REPORT_DICT['Application Control'][maturity_level]:
+    #         print(REPORT_DICT['Application Control'][maturity_level][control]['Control Name'])
 
     # for child in root:
     #     print(child.tag, child.attrib)
