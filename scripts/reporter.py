@@ -25,7 +25,6 @@ def application_control_audit(root):
     if int(root[9][0].text) == 0:
         print('No user policies applied in this GPO')
     else:
-
         file_list = []
         f = open('ms_block_list.txt', 'r')
         lines = f.readlines()
@@ -166,27 +165,33 @@ def patch_os_audit(session, ftp_client):
 
     # Read the servers operating system
     execute_command('powershell (Get-CimInstance Win32_OperatingSystem).version ^| Out-File C:\\ADAudit\\os_patching_info.txt', session)
+    # Get info for all the client computers operating systems
+    execute_command(
+        'powershell Get-ADComputer -Filter * -Property * ^| Format-Table Name,OperatingSystem,OperatingSystemVersion ^| Out-File C:\\ADAudit\\client_os_info.txt',
+        session)
+    # Get the results of the powershell scripts
+    getfile('C:\\ADAudit\\client_os_info.txt', 'client_os_info.txt', session, ftp_client)
     getfile('C:\\ADAudit\\os_patching_info.txt', 'os_patching_info.txt', session, ftp_client)
 
-    with open('os_patching_info.txt', encoding='utf-16', errors='ignore') as f:
-        lines = f.readlines()
-        for i in range(0, len(lines)):
-            server_os_version = lines[i].strip('\n')
-            if int(server_os_version.split('.')[0]) < 10:
-                server_os_flag = 0
-
-    # Get info for all the client computers operating systems
-    execute_command('powershell Get-ADComputer -Filter * -Property * ^| Format-Table Name,OperatingSystem,OperatingSystemVersion ^| Out-File C:\\ADAudit\\client_os_info.txt',
-                    session)
-    getfile('C:\\ADAudit\\client_os_info.txt', 'client_os_info.txt', session, ftp_client)
-
-    with open('client_os_info.txt', encoding='utf-16', errors='ignore') as f:
-        lines = f.readlines()
-        for i in range(4, len(lines)):
-            if lines[i].strip('\n').strip().split(' ')[0] != '':
-                os_version = float(lines[i].strip('\n').strip().split(' ')[-2])
-                if os_version < 10.0:
-                    client_os_flag = 0
+    try:
+        with open('os_patching_info.txt', encoding='utf-16', errors='ignore') as f:
+            lines = f.readlines()
+            for i in range(0, len(lines)):
+                server_os_version = lines[i].strip('\n')
+                if int(server_os_version.split('.')[0]) < 10:
+                    server_os_flag = 0
+    except:
+        print('Unable to get OS patching info')
+    try:
+        with open('client_os_info.txt', encoding='utf-16', errors='ignore') as f:
+            lines = f.readlines()
+            for i in range(4, len(lines)):
+                if lines[i].strip('\n').strip().split(' ')[0] != '':
+                    os_version = float(lines[i].strip('\n').strip().split(' ')[-2])
+                    if os_version < 10.0:
+                        client_os_flag = 0
+    except:
+        print('Unable to read client OS info')
 
     if client_os_flag == 1:
         current_report_result['Patch Operating Systems']['Maturity Level 1']['Control 2'][
@@ -231,19 +236,43 @@ def mfa_audit(root):
                 current_report_result['Multi-factor Authentication']['Maturity Level 3']['Control 4'][
                     'Policy Score'] = 1
 
-
+# Done
 def patch_application_audit(session, ftp_client):
     print('Patch Applications Audit')
 
+    # Run powershell scripts on server
+    execute_command('powershell Get-WsusServer ^| Out-File C:\\ADAudit\\wsus_info.txt', session)
     execute_command('powershell (Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt', session)
-    execute_command('powershell Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
-                    session)
+    execute_command('powershell Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt', session)
+    # Get the results of the powershell scripts
     getfile('C:\\ADAudit\\application_patching_info.txt', 'application_patching_info.txt', session, ftp_client)
+    getfile('C:\\ADAudit\\wsus_info.txt', 'wsus_info.txt', session, ftp_client)
 
-    with open('application_patching_info.txt') as f:
-        lines = f.readlines()
-        for i in range(0, len(lines)):
-            print(lines[i])
+    try:
+        with open('application_patching_info.txt') as f:
+            lines = f.readlines()
+            # remote management has been installed
+            if len(lines) != 0:
+                current_report_result['Patch Applications']['Maturity Level 1']['Control 2'][
+                    'Policy Score'] = 1
+                current_report_result['Patch Applications']['Maturity Level 2']['Control 2'][
+                    'Policy Score'] = 1
+                current_report_result['Patch Applications']['Maturity Level 3']['Control 3'][
+                    'Policy Score'] = 1
+    except:
+        print('Unable to read application patching information')
+    try:
+        with open('wsus_info.txt') as f:
+            lines = f.readlines()
+            if len(lines) != 0:
+                current_report_result['Patch Applications']['Maturity Level 1']['Control 1'][
+                    'Policy Score'] = 1
+                current_report_result['Patch Applications']['Maturity Level 2']['Control 1'][
+                    'Policy Score'] = 1
+                current_report_result['Patch Applications']['Maturity Level 3']['Control 1'][
+                    'Policy Score'] = 1
+    except:
+        print('Unable to read WSUS information')
 
 
 # Done
@@ -304,32 +333,32 @@ def backup_audit(session, ftp_client):
 
 def clean_up_files(ftp_client):
     # remove all the files from the server
-    time.sleep(1)
-    # ftp_client.remove('C:\\ADAudit\\ou_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
-    # ftp_client.remove('C:\\ADAudit\\proxy_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\application_patching_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\backup_files.txt')
-    # ftp_client.remove('C:\\ADAudit\\backup_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\os_patching_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\vm_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\client_os_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
-    # ftp_client.remove('C:\\ADAudit\\object_linking_info.txt')
-    # ftp_client.rmdir('C:\\ADAudit')
+    ftp_client.remove('C:\\ADAudit\\ou_info.txt')
+    ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
+    ftp_client.remove('C:\\ADAudit\\proxy_info.txt')
+    ftp_client.remove('C:\\ADAudit\\application_patching_info.txt')
+    ftp_client.remove('C:\\ADAudit\\backup_files.txt')
+    ftp_client.remove('C:\\ADAudit\\backup_info.txt')
+    ftp_client.remove('C:\\ADAudit\\os_patching_info.txt')
+    ftp_client.remove('C:\\ADAudit\\vm_info.txt')
+    ftp_client.remove('C:\\ADAudit\\client_os_info.txt')
+    ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
+    ftp_client.remove('C:\\ADAudit\\object_linking_info.txt')
+    ftp_client.remove('C:\\AdAudit\\wsus_info.txt')
+    ftp_client.rmdir('C:\\ADAudit')
 
-    time.sleep(1)
     # remove all the files from the server the script is running on
-    # os.remove('gpo_guids.txt')
-    # os.remove('proxy_info.txt')
-    # os.remove('gpo_report.xml')
-    # os.remove('backup_files.txt')
-    # os.remove('application_patching_info.txt')
-    # os.remove('backup_info.txt')
-    # os.remove('os_patching_info.txt')
-    # os.remove('vm_info.txt')
-    # os.remove('client_os_info.txt')
-    # os.remove(object_linking_info.txt)
+    os.remove('gpo_guids.txt')
+    os.remove('proxy_info.txt')
+    os.remove('gpo_report.xml')
+    os.remove('backup_files.txt')
+    os.remove('application_patching_info.txt')
+    os.remove('backup_info.txt')
+    os.remove('os_patching_info.txt')
+    os.remove('vm_info.txt')
+    os.remove('wsus_info.txt')
+    os.remove('client_os_info.txt')
+    os.remove('object_linking_info.txt')
     ftp_client.close()
 
 def parse_xml(session, ftp_client):
@@ -369,12 +398,12 @@ def connect_to_server(server, username, password):
         ssh.connect(server, username=username, password=password)
         print('Successfully connected to the server')
         ftp_client = ssh.open_sftp()
-        # ftp_client.mkdir('C:\\ADAudit')
+        ftp_client.mkdir('C:\\ADAudit')
         return ssh, ftp_client
     except:
         raise ValueError('Failed to connect to server with credentials')
 
-# if __name__=='__main__':
+
 def get_ad_info(address, username, password):
     paramiko.util.log_to_file("paramiko.log")
 
@@ -385,52 +414,52 @@ def get_ad_info(address, username, password):
         session, ftp_client = connect_to_server(address, username, password)
     except:
         raise ValueError('could not connect to the server')
-    # session, ftp_client = connect_to_server('10.1.10.2')
+
     print('Reading GPO\'s....')
-    #
-    # try:
-    #     execute_command('powershell Get-ADOrganizationalUnit -Filter \'Name -like \\"*\\"\' ^| Format-Table Name, LinkedGroupPolicyObjects -A ^| Out-String -Width 10000 > C:\\ADAudit\\ou_info.txt', session)
-    #     getfile('C:\\ADAudit\\ou_info.txt', 'gpo_guids.txt', session, ftp_client)
-    #     print('Successfully read GPO\'s from target server')
-    # except:
-    #     print('Unable to read GPO\'s on target server')
+
+    try:
+        execute_command('powershell Get-ADOrganizationalUnit -Filter \'Name -like \\"*\\"\' ^| Format-Table Name, LinkedGroupPolicyObjects -A ^| Out-String -Width 10000 > C:\\ADAudit\\ou_info.txt', session)
+        getfile('C:\\ADAudit\\ou_info.txt', 'gpo_guids.txt', session, ftp_client)
+        print('Successfully read GPO\'s from target server')
+    except:
+        print('Unable to read GPO\'s on target server')
 
     # read the parse the gpo ids and add them to the gpo dictionary
-    # try:
-    #     with open('gpo_guids.txt') as f:
-    #         lines = f.readlines()[3:]
-    #         for i in range(0, len(lines)):
-    #             line = lines[i].strip('\n').split('=')
-    #             if len(line) >= 2:
-    #                 gpo_guid_list = []
-    #                 ou_name = line[0][:-3].strip()
-    #                 for j in range(0, int(len(line)/5)):
-    #                     gpo_guid_list.append(re.sub('[{},]', '', line[j * 5 + 1][:-3]))
-    #                 ou_dict[ou_name] = gpo_guid_list
-    # except:
-    #     print('Unable to read GPO GUID\'s')
+    try:
+        with open('gpo_guids.txt') as f:
+            lines = f.readlines()[3:]
+            for i in range(0, len(lines)):
+                line = lines[i].strip('\n').split('=')
+                if len(line) >= 2:
+                    gpo_guid_list = []
+                    ou_name = line[0][:-3].strip()
+                    for j in range(0, int(len(line)/5)):
+                        gpo_guid_list.append(re.sub('[{},]', '', line[j * 5 + 1][:-3]))
+                    ou_dict[ou_name] = gpo_guid_list
+    except:
+        print('Unable to read GPO GUID\'s')
 
     print('Iterating through GPO\'s...')
     
     # go through each of the gpos that returned from the server and check what policies are applied
-    # for ou in ou_dict:
-    #     for gpo_guid in ou_dict[ou]:
-    #         # execute commands on the server
-    #         execute_command('powershell Get-GPOReport -GUID {} -ReportType XML -Path C:\\ADAudit\\GPOReport.xml'.format(gpo_guid), session)
-    #         # get report file off the server
-    #         getfile('C:\\ADAudit\\GPOReport.xml', 'gpo_report.xml', session, ftp_client)
-    #         parse_xml(session, ftp_client)
+    for ou in ou_dict:
+        for gpo_guid in ou_dict[ou]:
+            # execute commands on the server
+            execute_command('powershell Get-GPOReport -GUID {} -ReportType XML -Path C:\\ADAudit\\GPOReport.xml'.format(gpo_guid), session)
+            # get report file off the server
+            getfile('C:\\ADAudit\\GPOReport.xml', 'gpo_report.xml', session, ftp_client)
+            parse_xml(session, ftp_client)
 
 
     # Audit categories that get run once per audit
-    # patch_application_audit(session, ftp_client)
-    # patch_os_audit(session, ftp_client)
+    patch_application_audit(session, ftp_client)
+    patch_os_audit(session, ftp_client)
     backup_audit(session, ftp_client)
 
-    print(gpo_dict)
-    print(current_report_result)
+    # print(gpo_dict)
+    # print(current_report_result)
 
     # clean up all the files created on the server to ensure that sensitive AD info is never leaked
-    # clean_up_files(ftp_client)
+    clean_up_files(ftp_client)
 
     return current_report_result
