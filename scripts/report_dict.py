@@ -63,70 +63,70 @@ REPORT_DICT = {
             }
         },
     },
-    # 'Patch Applications': {
-    #     'Maturity Level 1': {
-    #         'Control 1': {
-    #             'Control Name': ,
-    #             'Policy Name': '',
-    #             'Policy Location': ,
-    #             'Policy Script': ,
-    #             'Policy Actions': ,
-    #             'Policy Score':
-    #         },
-    #         'Control 2': {
-    #             'Control Name': ,
-    #             'Policy Name': '',
-    #             'Policy Location': ,
-    #             'Policy Script': ,
-    #             'Policy Actions': ,
-    #             'Policy Score':
-    #         }
-    #     },
-    #     'Maturity Level 2': {
-    #         'Control 1': {
-    #             'Control Name': ,
-    #             'Policy Name': '',
-    #             'Policy Location': ,
-    #             'Policy Script': ,
-    #             'Policy Actions': ,
-    #             'Policy Score':
-    #         },
-    #         'Control 2': {
-    #             'Control Name': ,
-    #             'Policy Name': '',
-    #             'Policy Location': ,
-    #             'Policy Script': ,
-    #             'Policy Actions': ,
-    #             'Policy Score':
-    #         }
-    #     },
-    #     'Maturity Level 3': {
-    #         'Control 1': {
-    #             'Control Name': ,
-    #             'Policy Name': '',
-    #             'Policy Location': ,
-    #             'Policy Script': ,
-    #             'Policy Actions': ,
-    #             'Policy Score':
-    #         },
-    #         'Control 2': {
-    #             'Control Name': ,
-    #             'Policy Name': '',
-    #             'Policy Location': ,
-    #             'Policy Script': ,
-    #             'Policy Actions': ,
-    #             'Policy Score':
-    #         },
-    #         'Control 3': {
-    #             'Control Name': ,
-    #             'Policy Name': '',
-    #             'Policy Location': ,
-    #             'Policy Script': ,
-    #             'Policy Actions': ,
-    #             'Policy Score':
-    #         }
-    #     }
-    # },
+    'Patch Applications': {
+        'Maturity Level 1': {
+            'Control 1': {
+                'Control Name': 'Security vulnerabilities in applications and drivers assessed as extreme risk are patched, updated or mitigated within one month of the security vulnerabilities being identified by vendors, independent third parties, system managers or users',
+                'Policy Name': None,
+                'Policy Location': None,
+                'Policy Script': 'Get-WsusServer',
+                'Policy Actions': 'Ensure that a WSUS server is configured to maintain all drivers and key software on all computers in the domain',
+                'Policy Score': 0
+            },
+            'Control 2': {
+                'Control Name': 'Applications that are no longer supported by vendors with patches or updates for security vulnerabilities are updated or replaced with vendor-supported versions.',
+                'Policy Name': None,
+                'Policy Location': None,
+                'Policy Script': '(Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt  Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
+                'Policy Actions': 'Ensure that all applications installed on all machines on the domain always remain updated.',
+                'Policy Score': 0
+            }
+        },
+        'Maturity Level 2': {
+            'Control 1': {
+                'Control Name': 'Security vulnerabilities in applications and drivers assessed as extreme risk are patched, updated or mitigated within one month of the security vulnerabilities being identified by vendors, independent third parties, system managers or users',
+                'Policy Name': None,
+                'Policy Location': None,
+                'Policy Script': 'Get-WsusServer',
+                'Policy Actions': 'Ensure that a WSUS server is configured to maintain all drivers and key software on all computers in the domain',
+                'Policy Score': 0
+            },
+            'Control 2': {
+                'Control Name': 'Applications that are no longer supported by vendors with patches or updates for security vulnerabilities are updated or replaced with vendor-supported versions.',
+                'Policy Name': None,
+                'Policy Location': None,
+                'Policy Script': '(Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt  Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
+                'Policy Actions': 'Ensure that all applications installed on all machines on the domain always remain updated.',
+                'Policy Score': 0
+            }
+        },
+        'Maturity Level 3': {
+            'Control 1': {
+                'Control Name': 'Security vulnerabilities in applications and drivers assessed as extreme risk are patched, updated or mitigated within one month of the security vulnerabilities being identified by vendors, independent third parties, system managers or users',
+                'Policy Name': None,
+                'Policy Location': None,
+                'Policy Script': 'Get-WsusServer',
+                'Policy Actions': 'Ensure that a WSUS server is configured to maintain all drivers and key software on all computers in the domain',
+                'Policy Score': 0
+            },
+            'Control 2': {
+                'Control Name': 'An automated mechanism is used to confirm and record that deployed application and driver patches or updates have been installed, applied successfully and remain in place.',
+                'Policy Name': 'ADESA',
+                'Policy Location': None,
+                'Policy Script': None,
+                'Policy Actions': 'This program ensure that all PC\'s are being actively monitored for updates',
+                'Policy Score': 1
+            },
+            'Control 3': {
+                'Control Name': 'Applications that are no longer supported by vendors with patches or updates for security vulnerabilities are updated or replaced with vendor-supported versions.',
+                'Policy Name': None,
+                'Policy Location': None,
+                'Policy Script': '(Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt  Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
+                'Policy Actions': 'Ensure that all applications installed on all machines on the domain always remain updated.',
+                'Policy Score': 0
+            }
+        }
+    },
     'Microsoft Office Macros': {
         'Maturity Level 1': {
             'Control 1': {
@@ -269,14 +269,14 @@ REPORT_DICT = {
                 'Policy Actions': 'Disable flash support for all office applications.',
                 'Policy Score': 0
             },
-            # 'Control 5': {
-            #     'Control Name': ,
-            #     'Policy Name': '',
-            #     'Policy Location': ,
-            #     'Policy Script': ,
-            #     'Policy Actions': ,
-            #     'Policy Score':
-            # }
+            'Control 5': {
+                'Control Name': 'Microsoft Office is configured to prevent activation of Object Linking and Embedding packages.',
+                'Policy Name': 'Prevent activation of Object Linking and Embedding packages',
+                'Policy Location': 'HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Excel\Security',
+                'Policy Script': 'Get-ItemProperty -Path "HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Excel\Security"',
+                'Policy Actions': 'Ensure to enable the registry key that prevents object linking in microsoft office',
+                'Policy Score': 0
+            }
         }
     },
     'Restrict Administrative Privileges': {
@@ -389,14 +389,14 @@ REPORT_DICT = {
                 'Policy Actions': 'Update the operating system to a newer version within the given timeframe.',
                 'Policy Score': 0
             },
-            # 'Control 2': {
-            #     'Control Name': ,
-            #     'Policy Name': '',
-            #     'Policy Location': ,
-            #     'Policy Script': ,
-            #     'Policy Actions': ,
-            #     'Policy Score':
-            # },
+            'Control 2': {
+                'Control Name': 'An automated mechanism is used to confirm and record that deployed operating system and firmware patches or updates have been installed, applied successfully and remain in place.',
+                'Policy Name': 'ADESA',
+                'Policy Location': None,
+                'Policy Script': None,
+                'Policy Actions': 'This program ensure that all PC\'s are being actively monitored for updates',
+                'Policy Score': 1
+            },
             'Control 3': {
                 'Control Name': 'Operating systems for workstations, servers and ICT equipment that are no longer supported by vendors with patches or updates for security vulnerabilities are updated or replaced with vendorsupported versions.',
                 'Policy Name': None,

@@ -1,5 +1,6 @@
 import os, time
 import re
+from datetime import datetime
 import paramiko
 import xml.etree.ElementTree as ET
 
@@ -62,19 +63,6 @@ def application_control_audit(root):
             current_report_result['Application Control']['Maturity Level 3']['Control 3']['Policy Score'] = 1
 
 
-def patch_application_audit(session, ftp_client):
-    print('Patch Applications Audit')
-    # TODO fix command and add logic once file is read
-    # execute_command('powershell (Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt', session)
-    # execute_command('powershell Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
-    #                 session)
-    # getfile('C:\\ADAudit\\application_patching_info.txt', 'application_patching_info.txt', session, ftp_client)
-
-    with open('application_patching_info.txt') as f:
-        lines = f.readlines()
-        for i in range(0, len(lines)):
-            print(lines[i])
-
 # Done
 def office_macros_audit(root):
     print('Office macro report')
@@ -97,8 +85,8 @@ def office_macros_audit(root):
                 current_report_result['Microsoft Office Macros']['Maturity Level 3']['Control 1']['Policy Score'] = 1
 
 
-# TODO Deal with registry keys
-def application_hardening_audit(root):
+# Done
+def application_hardening_audit(root, session, ftp_client):
     print('application hardening report')
     # computer based policies at root[8][3], iterate on the 4th layer for GPO details
     if int(root[8][0].text) == 0:
@@ -121,10 +109,22 @@ def application_hardening_audit(root):
                 current_report_result['User Application Hardening']['Maturity Level 1']['Control 1']['Policy Score'] = 1
                 current_report_result['User Application Hardening']['Maturity Level 2']['Control 1']['Policy Score'] = 1
                 current_report_result['User Application Hardening']['Maturity Level 3']['Control 1']['Policy Score'] = 1
+            if name.text == 'Block Flash activation in Office documents':
+                current_report_result['User Application Hardening']['Maturity Level 3']['Control 4']['Policy Score'] = 1
 
-        # this is a registry key
-        #     elif root[8][3][0][i][0].text == 'Block Flash activation in Office documents':
-        #         print(root[8][3][0][i][0].text)
+    # Find the registry key to prevent object linking
+    execute_command(
+        'powershell Get-ItemProperty -Path \\"HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Excel\\Security\\" ^| Format-Table ProxyEnable ^| Out-File C:\\ADAudit\\object_linking_info.txt',
+        session)
+    getfile('C:\\ADAudit\\object_linking_info.txt', 'object_linking_info.txt', session, ftp_client)
+
+    # check if the registry key exists
+    with open('object_linking_info.txt', encoding='utf-16', errors='ignore') as f:
+        lines = f.readlines()
+        if len(lines) != 0:
+            current_report_result['User Application Hardening']['Maturity Level 3']['Control 5']['Policy Score'] = 1
+
+
 
 
 # Done
@@ -147,14 +147,14 @@ def admin_privileges_audit(root, session, ftp_client):
         execute_command('powershell Get-ItemProperty -Path \\"Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\" ^| Format-Table ProxyEnable ^| Out-File C:\\ADAudit\\proxy_info.txt', session)
         getfile('C:\\ADAudit\\proxy_info.txt', 'proxy_info.txt', session, ftp_client)
 
-        with open('proxy_info.txt', encoding='utf-16', errors='ignore') as f:
-            lines = f.readlines()
-            try:
-                if int(lines[3].strip('\n').strip()) == 1:
-                    current_report_result['Restrict Administrative Privileges']['Maturity Level 3']['Control 3'][
-                        'Policy Score'] = 1
-            except:
-                print('No proxy enabled')
+    with open('proxy_info.txt', encoding='utf-16', errors='ignore') as f:
+        lines = f.readlines()
+        try:
+            if int(lines[3].strip('\n').strip()) == 1:
+                current_report_result['Restrict Administrative Privileges']['Maturity Level 3']['Control 3'][
+                    'Policy Score'] = 1
+        except:
+            print('No proxy enabled')
 
 
 # Done
@@ -232,11 +232,25 @@ def mfa_audit(root):
                     'Policy Score'] = 1
 
 
+def patch_application_audit(session, ftp_client):
+    print('Patch Applications Audit')
+
+    execute_command('powershell (Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt', session)
+    execute_command('powershell Get-CimInstance -ComputerName (Get-Content C:\\ADAudit\\domain_computer_list.txt) -ClassName win32_product -ErrorAction SilentlyContinue ^| Select-Object PSComputerName, Name, PackageName, InstallDate ^| Out-File C:\\ADAudit\\application_patching_info.txt',
+                    session)
+    getfile('C:\\ADAudit\\application_patching_info.txt', 'application_patching_info.txt', session, ftp_client)
+
+    with open('application_patching_info.txt') as f:
+        lines = f.readlines()
+        for i in range(0, len(lines)):
+            print(lines[i])
+
+
+# Done
 def backup_audit(session, ftp_client):
     print('Backup Audit')
-    # TODO fix command and add logic once file is read
-    # Get all backup information on the server
 
+    # Get all backup information on the server
     execute_command('powershell WBAdmin ENABLE BACKUP ^| Out-File C:\\ADAudit\\backup_info.txt', session)
     getfile('C:\\ADAudit\\backup_info.txt', 'backup_info.txt', session, ftp_client)
 
@@ -258,35 +272,33 @@ def backup_audit(session, ftp_client):
             lines = f.readlines()
             for i in range(0, len(lines)):
                 if lines[i][:11] == 'Backup time':
-                    print(lines[i])
-
-        if None:
-            current_report_result['Daily Backups']['Maturity Level 1']['Control 2']['Policy Score'] = 1
-            current_report_result['Daily Backups']['Maturity Level 2']['Control 2']['Policy Score'] = 1
-            current_report_result['Daily Backups']['Maturity Level 2']['Control 3']['Policy Score'] = 1
-            current_report_result['Daily Backups']['Maturity Level 3']['Control 2']['Policy Score'] = 1
-            current_report_result['Daily Backups']['Maturity Level 3']['Control 3']['Policy Score'] = 1
+                    backup_date = datetime.strptime(lines[i][13:][:9], '%m/%d/%Y')
+                    current_date = datetime.now()
+                    res = current_date - backup_date
+                    if res.days >= 90:
+                        current_report_result['Daily Backups']['Maturity Level 3']['Control 3']['Policy Score'] = 1
+                        current_report_result['Daily Backups']['Maturity Level 3']['Control 2']['Policy Score'] = 1
+                    elif res.days >= 30 and res.days < 90:
+                        current_report_result['Daily Backups']['Maturity Level 2']['Control 2']['Policy Score'] = 1
+                        current_report_result['Daily Backups']['Maturity Level 2']['Control 3']['Policy Score'] = 1
+                    else:
+                        current_report_result['Daily Backups']['Maturity Level 1']['Control 2']['Policy Score'] = 1
 
     except:
         print('Unable to get backup info from the server')
 
     # Get info of all running vms on the server
-
-    # TODO make sure this file doesnt return blank
-
     execute_command('powershell Get-VM ^| Out-File C:\\ADAudit\\vm_info.txt', session)
     getfile('C:\\ADAudit\\vm_info.txt', 'vm_info.txt', session, ftp_client)
 
     try:
         with open('vm_info.txt', encoding='utf-16', errors='ignore') as f:
             lines = f.readlines()
-            for i in range(0, len(lines)):
-                print(lines[i])
-                if None:
-                    current_report_result['Daily Backups']['Maturity Level 2']['Control 4']['Policy Score'] = 1
-                    current_report_result['Daily Backups']['Maturity Level 2']['Control 5']['Policy Score'] = 1
-                    current_report_result['Daily Backups']['Maturity Level 3']['Control 4']['Policy Score'] = 1
-                    current_report_result['Daily Backups']['Maturity Level 3']['Control 5']['Policy Score'] = 1
+            if len(lines) != 0:
+                current_report_result['Daily Backups']['Maturity Level 2']['Control 4']['Policy Score'] = 1
+                current_report_result['Daily Backups']['Maturity Level 2']['Control 5']['Policy Score'] = 1
+                current_report_result['Daily Backups']['Maturity Level 3']['Control 4']['Policy Score'] = 1
+                current_report_result['Daily Backups']['Maturity Level 3']['Control 5']['Policy Score'] = 1
     except:
         print('Unable to get VM info from the server')
 
@@ -303,6 +315,7 @@ def clean_up_files(ftp_client):
     # ftp_client.remove('C:\\ADAudit\\vm_info.txt')
     # ftp_client.remove('C:\\ADAudit\\client_os_info.txt')
     # ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
+    # ftp_client.remove('C:\\ADAudit\\object_linking_info.txt')
     # ftp_client.rmdir('C:\\ADAudit')
 
     time.sleep(1)
@@ -316,6 +329,7 @@ def clean_up_files(ftp_client):
     # os.remove('os_patching_info.txt')
     # os.remove('vm_info.txt')
     # os.remove('client_os_info.txt')
+    # os.remove(object_linking_info.txt)
     ftp_client.close()
 
 def parse_xml(session, ftp_client):
@@ -328,7 +342,7 @@ def parse_xml(session, ftp_client):
     print('Currently auditing GPO: {}'.format(root[1].text))
 
     # Audit categories run once per GPO applied to the server
-    application_control_audit(root)
+    application_control_audit(root, session, ftp_client)
     office_macros_audit(root)
     application_hardening_audit(root)
     admin_privileges_audit(root, session, ftp_client)
