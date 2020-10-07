@@ -143,8 +143,8 @@ def admin_privileges_audit(root, session, ftp_client):
             current_report_result['Restrict Administrative Privileges']['Maturity Level 2']['Control 1']['Policy Score'] = 1
             current_report_result['Restrict Administrative Privileges']['Maturity Level 3']['Control 1']['Policy Score'] = 1
 
-        execute_command('powershell Get-ItemProperty -Path \\"Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\" ^| Format-Table ProxyEnable ^| Out-File C:\\ADAudit\\proxy_info.txt', session)
-        getfile('C:\\ADAudit\\proxy_info.txt', 'proxy_info.txt', session, ftp_client)
+    execute_command('powershell Get-ItemProperty -Path \\"Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\" ^| Format-Table ProxyEnable ^| Out-File C:\\ADAudit\\proxy_info.txt', session)
+    getfile('C:\\ADAudit\\proxy_info.txt', 'proxy_info.txt', session, ftp_client)
 
     with open('proxy_info.txt', encoding='utf-16', errors='ignore') as f:
         lines = f.readlines()
@@ -283,53 +283,53 @@ def backup_audit(session, ftp_client):
     execute_command('powershell WBAdmin ENABLE BACKUP ^| Out-File C:\\ADAudit\\backup_info.txt', session)
     getfile('C:\\ADAudit\\backup_info.txt', 'backup_info.txt', session, ftp_client)
 
-    try:
-        with open('backup_info.txt', encoding='utf-16', errors='ignore') as f:
-            lines = f.readlines()
-            if 'The scheduled backup settings:' == lines[3].strip('\n').strip():
-                current_report_result['Daily Backups']['Maturity Level 1']['Control 1']['Policy Score'] = 1
-                current_report_result['Daily Backups']['Maturity Level 2']['Control 1']['Policy Score'] = 1
-                current_report_result['Daily Backups']['Maturity Level 3']['Control 1']['Policy Score'] = 1
-    except:
-        print('Unable to get backup information from server')
+    # try:
+    with open('backup_info.txt', encoding='utf-16', errors='ignore') as f:
+        lines = f.readlines()
+        if 'The scheduled backup settings:' == lines[3].strip('\n').strip():
+            current_report_result['Daily Backups']['Maturity Level 1']['Control 1']['Policy Score'] = 1
+            current_report_result['Daily Backups']['Maturity Level 2']['Control 1']['Policy Score'] = 1
+            current_report_result['Daily Backups']['Maturity Level 3']['Control 1']['Policy Score'] = 1
+    # except:
+    #     print('Unable to get backup information from server')
 
     execute_command('powershell WBAdmin GET VERSIONS ^| Out-File C:\\ADAudit\\backup_files.txt', session)
     getfile('C:\\ADAudit\\backup_files.txt', 'backup_files.txt', session, ftp_client)
 
-    try:
-        with open('backup_files.txt', encoding='utf-16', errors='ignore') as f:
-            lines = f.readlines()
-            for i in range(0, len(lines)):
-                if lines[i][:11] == 'Backup time':
-                    backup_date = datetime.strptime(lines[i][13:][:9], '%m/%d/%Y')
-                    current_date = datetime.now()
-                    res = current_date - backup_date
-                    if res.days >= 90:
-                        current_report_result['Daily Backups']['Maturity Level 3']['Control 3']['Policy Score'] = 1
-                        current_report_result['Daily Backups']['Maturity Level 3']['Control 2']['Policy Score'] = 1
-                    elif res.days >= 30 and res.days < 90:
-                        current_report_result['Daily Backups']['Maturity Level 2']['Control 2']['Policy Score'] = 1
-                        current_report_result['Daily Backups']['Maturity Level 2']['Control 3']['Policy Score'] = 1
-                    else:
-                        current_report_result['Daily Backups']['Maturity Level 1']['Control 2']['Policy Score'] = 1
+    # try:
+    with open('backup_files.txt', encoding='utf-16', errors='ignore') as f:
+        lines = f.readlines()
+        for i in range(0, len(lines)):
+            if lines[i][:11] == 'Backup time':
+                backup_date = datetime.strptime(lines[i][13:][:9], '%m/%d/%Y')
+                current_date = datetime.now()
+                res = current_date - backup_date
+                if res.days >= 90:
+                    current_report_result['Daily Backups']['Maturity Level 3']['Control 3']['Policy Score'] = 1
+                    current_report_result['Daily Backups']['Maturity Level 3']['Control 2']['Policy Score'] = 1
+                elif res.days >= 30 and res.days < 90:
+                    current_report_result['Daily Backups']['Maturity Level 2']['Control 2']['Policy Score'] = 1
+                    current_report_result['Daily Backups']['Maturity Level 2']['Control 3']['Policy Score'] = 1
+                else:
+                    current_report_result['Daily Backups']['Maturity Level 1']['Control 2']['Policy Score'] = 1
 
-    except:
-        print('Unable to get backup info from the server')
+    # except:
+    #     print('Unable to get backup info from the server')
 
     # Get info of all running vms on the server
     execute_command('powershell Get-VM ^| Out-File C:\\ADAudit\\vm_info.txt', session)
     getfile('C:\\ADAudit\\vm_info.txt', 'vm_info.txt', session, ftp_client)
 
-    try:
-        with open('vm_info.txt', encoding='utf-16', errors='ignore') as f:
-            lines = f.readlines()
-            if len(lines) != 0:
-                current_report_result['Daily Backups']['Maturity Level 2']['Control 4']['Policy Score'] = 1
-                current_report_result['Daily Backups']['Maturity Level 2']['Control 5']['Policy Score'] = 1
-                current_report_result['Daily Backups']['Maturity Level 3']['Control 4']['Policy Score'] = 1
-                current_report_result['Daily Backups']['Maturity Level 3']['Control 5']['Policy Score'] = 1
-    except:
-        print('Unable to get VM info from the server')
+    # try:
+    with open('vm_info.txt', encoding='utf-16', errors='ignore') as f:
+        lines = f.readlines()
+        if len(lines) != 0:
+            current_report_result['Daily Backups']['Maturity Level 2']['Control 4']['Policy Score'] = 1
+            current_report_result['Daily Backups']['Maturity Level 2']['Control 5']['Policy Score'] = 1
+            current_report_result['Daily Backups']['Maturity Level 3']['Control 4']['Policy Score'] = 1
+            current_report_result['Daily Backups']['Maturity Level 3']['Control 5']['Policy Score'] = 1
+    # except:
+    #     print('Unable to get VM info from the server')
 
 def clean_up_files(ftp_client):
     # remove all the files from the server
@@ -371,9 +371,9 @@ def parse_xml(session, ftp_client):
     print('Currently auditing GPO: {}'.format(root[1].text))
 
     # Audit categories run once per GPO applied to the server
-    application_control_audit(root, session, ftp_client)
+    application_control_audit(root)
     office_macros_audit(root)
-    application_hardening_audit(root)
+    application_hardening_audit(root, session, ftp_client)
     admin_privileges_audit(root, session, ftp_client)
     mfa_audit(root)
 

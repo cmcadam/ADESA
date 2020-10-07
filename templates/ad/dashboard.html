@@ -16,12 +16,14 @@
         <div class="row">
             <div class="col-md-4">
                 Active Directory Environment Score
+                <h5>{{ ad_env_score }}/67</h5>
             </div>
             <div class="col-md-4">
                 Average Maturity Score
             </div>
             <div class="col-md-4">
                 Days Since Last Audit
+                <h5>{{ days_since_last_audit }}</h5>
             </div>
         </div>
         <div class="text-centre card-footer">
@@ -37,15 +39,19 @@
         <div class="row">
             <div class="col-md-3">
                 Application Control
+                <h5>{{ application_control_score }}/7</h5>
             </div>
             <div class="col-md-3">
                 Patching Applications
+                <h5>{{ patching_application_score }}/7</h5>
             </div>
             <div class="col-md-3">
                 Microsoft Office Macros
+                <h5>{{ office_macros_score }}/8</h5>
             </div>
             <div class="col-md-3">
                 User Application Hardening
+                <h5>{{ application_hardening_score }}/9</h5>
             </div>
         </div>
     </div>
@@ -56,13 +62,16 @@
         </div>
         <div class="row">
             <div class="col-md-4">
-                Restrict Admin Privilages
+                Restrict Admin Privileges
+                <h5>{{ admin_privileges_score }}/7</h5>
             </div>
             <div class="col-md-4">
                 Patch Operating Systems
+                <h5>{{ patching_os_score }}/7</h5>
             </div>
             <div class="col-md-4">
                 Multi-factor Authentication
+                <h5>{{ mfa_score }}/9</h5>
             </div>
         </div>
     </div>
@@ -73,6 +82,7 @@
         <div class="row">
             <div class="col-md-12">
                 Daily Backups
+                <h5>{{ backup_score }}/13</h5>
             </div>
         </div>
     </div>
