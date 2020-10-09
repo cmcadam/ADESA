@@ -124,8 +124,6 @@ def application_hardening_audit(root, session, ftp_client):
             current_report_result['User Application Hardening']['Maturity Level 3']['Control 5']['Policy Score'] = 1
 
 
-
-
 # Done
 def admin_privileges_audit(root, session, ftp_client):
     print('Admin Privileges Audit')
@@ -216,8 +214,13 @@ def mfa_audit(root):
     if int(root[8][0].text) == 0:
         print('No user policies applied in this GPO')
     else:
-        for i in range(0, len(root[8][3][0])):
-            if root[8][3][0][i][0].text == 'Client: Limit Two-Factor to RDP Logons Only':
+        for name in root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
+                                 '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
+                                 '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
+                                 '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Policy/'
+                                 '{http://www.microsoft.com/GroupPolicy/Settings/Registry}Name'
+                                 ):
+            if name.text == 'Client: Limit Two-Factor to RDP Logons Only':
                 current_report_result['Multi-factor Authentication']['Maturity Level 1']['Control 1']['Policy Score'] = 1
                 current_report_result['Multi-factor Authentication']['Maturity Level 1']['Control 2'][
                     'Policy Score'] = 1
@@ -235,6 +238,7 @@ def mfa_audit(root):
                     'Policy Score'] = 1
                 current_report_result['Multi-factor Authentication']['Maturity Level 3']['Control 4'][
                     'Policy Score'] = 1
+
 
 # Done
 def patch_application_audit(session, ftp_client):
@@ -283,20 +287,16 @@ def backup_audit(session, ftp_client):
     execute_command('powershell WBAdmin ENABLE BACKUP ^| Out-File C:\\ADAudit\\backup_info.txt', session)
     getfile('C:\\ADAudit\\backup_info.txt', 'backup_info.txt', session, ftp_client)
 
-    # try:
     with open('backup_info.txt', encoding='utf-16', errors='ignore') as f:
         lines = f.readlines()
         if 'The scheduled backup settings:' == lines[3].strip('\n').strip():
             current_report_result['Daily Backups']['Maturity Level 1']['Control 1']['Policy Score'] = 1
             current_report_result['Daily Backups']['Maturity Level 2']['Control 1']['Policy Score'] = 1
             current_report_result['Daily Backups']['Maturity Level 3']['Control 1']['Policy Score'] = 1
-    # except:
-    #     print('Unable to get backup information from server')
 
     execute_command('powershell WBAdmin GET VERSIONS ^| Out-File C:\\ADAudit\\backup_files.txt', session)
     getfile('C:\\ADAudit\\backup_files.txt', 'backup_files.txt', session, ftp_client)
 
-    # try:
     with open('backup_files.txt', encoding='utf-16', errors='ignore') as f:
         lines = f.readlines()
         for i in range(0, len(lines)):
@@ -313,14 +313,10 @@ def backup_audit(session, ftp_client):
                 else:
                     current_report_result['Daily Backups']['Maturity Level 1']['Control 2']['Policy Score'] = 1
 
-    # except:
-    #     print('Unable to get backup info from the server')
-
     # Get info of all running vms on the server
     execute_command('powershell Get-VM ^| Out-File C:\\ADAudit\\vm_info.txt', session)
     getfile('C:\\ADAudit\\vm_info.txt', 'vm_info.txt', session, ftp_client)
 
-    # try:
     with open('vm_info.txt', encoding='utf-16', errors='ignore') as f:
         lines = f.readlines()
         if len(lines) != 0:
@@ -328,11 +324,11 @@ def backup_audit(session, ftp_client):
             current_report_result['Daily Backups']['Maturity Level 2']['Control 5']['Policy Score'] = 1
             current_report_result['Daily Backups']['Maturity Level 3']['Control 4']['Policy Score'] = 1
             current_report_result['Daily Backups']['Maturity Level 3']['Control 5']['Policy Score'] = 1
-    # except:
-    #     print('Unable to get VM info from the server')
+
 
 def clean_up_files(ftp_client):
     # remove all the files from the server
+    time.sleep(2)
     ftp_client.remove('C:\\ADAudit\\ou_info.txt')
     ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
     ftp_client.remove('C:\\ADAudit\\proxy_info.txt')
@@ -347,6 +343,7 @@ def clean_up_files(ftp_client):
     ftp_client.remove('C:\\AdAudit\\wsus_info.txt')
     ftp_client.rmdir('C:\\ADAudit')
 
+    time.sleep(2)
     # remove all the files from the server the script is running on
     os.remove('gpo_guids.txt')
     os.remove('proxy_info.txt')
@@ -361,11 +358,10 @@ def clean_up_files(ftp_client):
     os.remove('object_linking_info.txt')
     ftp_client.close()
 
+
 def parse_xml(session, ftp_client):
     tree = ET.parse('gpo_report.xml')
     root = tree.getroot()
-    # for child in root:
-    #     print(child.tag, child.attrib)
 
     gpo_dict[root[1].text]=root[0][0].text
     print('Currently auditing GPO: {}'.format(root[1].text))
@@ -455,9 +451,6 @@ def get_ad_info(address, username, password):
     patch_application_audit(session, ftp_client)
     patch_os_audit(session, ftp_client)
     backup_audit(session, ftp_client)
-
-    # print(gpo_dict)
-    # print(current_report_result)
 
     # clean up all the files created on the server to ensure that sensitive AD info is never leaked
     clean_up_files(ftp_client)

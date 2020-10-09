@@ -1,11 +1,14 @@
-import json
-import reportlab
+import json, io
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.units import inch
 from datetime import datetime, timezone
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseBadRequest, FileResponse
+from django.contrib.auth.models import User
 
-from .models import Server, Audit, Report, TestClass
+from .models import Server, Audit, Report
 from .forms import AddServerForm, ServerCredentialsForm
 from .validators import validIPAddress
 
@@ -43,18 +46,21 @@ def dashboard(request):
     backup_score = 0
     ad_env_score = 0
     days_since_last_audit = 0
+    ad_env_maturity = 0
+    report_id = 0
 
     servers = Server.objects.filter(owner_id=request.user.id)
+    print(servers)
     # Find the newest version of the report
     for server in servers:
-        result = Report.objects.filter(server_id=server.id).order_by('-date_created').first()
+        if Report.objects.filter(server_id=server.id).order_by('-date_created').first() is not None:
+            result = Report.objects.filter(server_id=server.id).order_by('-date_created').first()
 
     if result is not None:
         # Iterate through the report to get all the scores and details
         for category in result.json_report:
             for maturity_level in result.json_report[category]:
                 for control in result.json_report[category][maturity_level]:
-                    # for details in result.json_report[category][maturity_level][control]:
                     if result.json_report[category][maturity_level][control]['Policy Score'] == 1:
                         if category == 'Application Control':
                             application_control_score += 1
@@ -76,20 +82,82 @@ def dashboard(request):
         ad_env_score = application_control_score + patching_application_score + office_macros_score + application_hardening_score + admin_privileges_score + patching_os_score + mfa_score + backup_score
         days_since_last_audit = (datetime.now(timezone.utc) - result.date_created).days
 
-    context = {
-        'result_dict': result,
-        'application_control_score': application_control_score,
-        'patching_application_score': patching_application_score,
-        'office_macros_score': office_macros_score,
-        'application_hardening_score': application_hardening_score,
-        'admin_privileges_score': admin_privileges_score,
-        'patching_os_score': patching_os_score,
-        'mfa_score': mfa_score,
-        'backup_score': backup_score,
-        'ad_env_score': ad_env_score,
-        'days_since_last_audit': days_since_last_audit
-    }
-    return render(request, 'ad/dashboard.html', context)
+        # Determine the
+        application_control_maturity = application_control_score / 7.0
+        patching_application_maturity = patching_application_score / 7.0
+        office_macros_maturity = office_macros_score / 8.0
+        application_hardening_maturity = application_hardening_score / 9.0
+        admin_privileges_maturity = admin_privileges_score / 7.0
+        patching_os_maturity = patching_os_score / 7.0
+        mfa_maturity = mfa_score / 9.0
+        backup_maturity = backup_score / 13.0
+
+        dict = {
+            'application_control_maturity': application_control_maturity,
+            'patching_application_maturity': patching_application_maturity,
+            'office_macros_maturity': office_macros_maturity,
+            'application_hardening_maturity': application_hardening_maturity,
+            'admin_privileges_maturity': admin_privileges_maturity,
+            'patching_os_maturity': patching_os_maturity,
+            'mfa_maturity': mfa_maturity,
+            'backup_maturity': backup_maturity
+        }
+
+        # Calculate the maturity score
+        for i in dict:
+            if 0 <= float(dict[i]) <= 1 / 3:
+                dict[i] = 1
+            elif 1 / 3 < dict[i] <= 2 / 3:
+                dict[i] = 2
+            elif 2 / 3 < dict[i] <= 1:
+                dict[i] = 3
+
+        ad_env_maturity = ad_env_score/67.0 * 3
+        report_id = result.id
+
+        context = {
+            'result_dict': result,
+            'application_control_score': {
+                'score': application_control_score,
+                'maturity_level': dict['application_control_maturity']
+            },
+            'patching_application_score': {
+                'score': patching_application_score,
+                'maturity_level': dict['patching_application_maturity']
+            },
+            'office_macros_score': {
+                'score': office_macros_score,
+                'maturity_level': dict['office_macros_maturity']
+            },
+            'application_hardening_score': {
+                'score': application_hardening_score,
+                'maturity_level': dict['application_hardening_maturity']
+            },
+            'admin_privileges_score': {
+                'score': admin_privileges_score,
+                'maturity_level': dict['admin_privileges_maturity']
+            },
+            'patching_os_score': {
+                'score': patching_os_score,
+                'maturity_level': dict['patching_os_maturity']
+            },
+            'mfa_score': {
+                'score': mfa_score,
+                'maturity_level': dict['mfa_maturity']
+            },
+            'backup_score': {
+                'score': backup_score,
+                'maturity_level': dict['backup_maturity']
+            },
+
+            'ad_env_score': ad_env_score,
+            'days_since_last_audit': days_since_last_audit,
+            'average_maturity_score': ad_env_maturity,
+            'report_id': report_id
+        }
+        return render(request, 'ad/dashboard.html', context)
+    else:
+        return render(request, 'ad/dashboard.html')
 
 
 def add_server(request):
@@ -108,37 +176,89 @@ def add_server(request):
     return render(request, 'ad/add_server.html', context)
 
 
-def audit_details(request, id):
-    server = Server.objects.get(id=id)
+def audit_details(request, pk):
+    server = Server.objects.get(id=pk)
 
     context = {}
     return render(request, 'ad/audit_details.html', context)
 
 
-def authorize_audit(request, id):
+def authorize_audit(request, pk):
     if request.method == 'POST':
         form = ServerCredentialsForm(request.POST)
         if form.is_valid():
-            server = Server.objects.get(id=id)
+            server = Server.objects.get(id=pk)
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
 
-            try:
-                result_dict = get_ad_info(server.server_address, username, password)
-                # TestClass.objects.create(test=result_dict)
-                Report.objects.create(
-                    server_id=server.id,
-                    json_report=result_dict,
-                )
-                messages.success(request, 'Audit complete')
-            except:
-                messages.error(request, 'Unable to audit server')
-                return HttpResponseBadRequest('This view can not handle method {0}'. \
-                                       format(request.method), status=403)
+            # try:
+            result_dict = get_ad_info(server.server_address, username, password)
+
+            report = Report.objects.create(
+                server_id=server.id,
+                json_report=result_dict,
+            )
+            if server.share_reports == 1:
+                auditor = User.objects.get(username=server.shared_with)
+                Audit.objects.create(
+                    report_id=report.id,
+                    user_id=auditor.id
+                 )
+            messages.success(request, 'Audit complete')
+            # except:
+            #     messages.error(request, 'Unable to audit server')
+            #     return HttpResponseBadRequest('This view can not handle method {0}'. \
+            #                            format(request.method), status=403)
 
     form = ServerCredentialsForm()
     context = {
         'form': form,
-        'server_id': id
+        'server_id': pk
     }
     return render(request, 'ad/server_credentials.html', context)
+
+
+def generate_report(request, pk):
+
+    buffer = io.BytesIO()
+    page_size = (15 * inch, 8 * inch)
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(page_size), leftMargin=-8*inch)
+    elements = []
+    data = []
+
+    report = Report.objects.get(id=pk)
+    tmp = []
+    for category in report.json_report:
+        tmp.append(category)
+        data.append(tmp)
+        tmp = []
+        for maturity_level in report.json_report[category]:
+            tmp.append(maturity_level)
+            data.append(tmp)
+            tmp = []
+            for control in report.json_report[category][maturity_level]:
+                tmp.append(control)
+                data.append(tmp)
+                tmp = []
+                for detail in report.json_report[category][maturity_level][control]:
+                    if detail == 'Policy Score' and report.json_report[category][maturity_level][control][detail] == 1:
+                        tmp.append(str(detail) + ':')
+                        tmp.append('Passed!')
+                        data.append(tmp)
+                        tmp = []
+                    elif detail == 'Policy Score' and report.json_report[category][maturity_level][control][detail] == 0:
+                        tmp.append(str(detail) + ':')
+                        tmp.append('Failed!')
+                        data.append(tmp)
+                        tmp = []
+                    else:
+                        tmp.append(str(detail) + ':')
+                        tmp.append(str(report.json_report[category][maturity_level][control][detail]))
+                        data.append(tmp)
+                        tmp = []
+
+    t = Table(data, colWidths=100, rowHeights=30)
+    elements.append(t)
+    doc.build(elements)
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename='report.pdf')
