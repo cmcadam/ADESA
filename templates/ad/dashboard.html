@@ -113,6 +113,6 @@
         </div>
     </div>
     {% else %}
-        <p>You dont have any report to view! <a href="#">click here to add a server and start reporting</a></p>
+        <p>You dont have any report to view! <a href="{% url 'add_server' %}">click here to add a server and start reporting</a></p>
     {% endif %}
 {% endblock %}
