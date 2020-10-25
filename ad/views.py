@@ -18,6 +18,8 @@ from scripts.reporter import get_ad_info
 def auditor(request):
     servers = Server.objects.filter(owner_id=request.user.id)
     external_reports = Audit.objects.filter(user_id=request.user.id)
+    for report in external_reports:
+        print(report.report_id)
     context = {
         'servers': servers,
         'external_reports': external_reports,
@@ -262,3 +264,31 @@ def generate_report(request, pk):
     doc.build(elements)
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='report.pdf')
+
+
+def edit_server(request, pk):
+    if request.method == 'POST':
+        form = AddServerForm(request.POST)
+        if form.is_valid():
+            form.save(user_id=request.user.id)
+            messages.success(request, 'Successfully updated server details')
+            return redirect('configuration')
+    server = Server.objects.get(id=pk)
+    form = AddServerForm(instance=server)
+    context = {
+        'form': form
+    }
+    return render(request, 'ad/add_server.html', context)
+
+
+def remove_server(request, pk):
+    if request.method == 'POST':
+        Server.objects.get(id=pk).delete()
+        messages.success(request, 'Successfully removed server!')
+        return redirect('configuration')
+
+    server = Server.objects.get(id=pk)
+    context = {
+        'server': server
+    }
+    return render(request, 'ad/remove_server.html', context)

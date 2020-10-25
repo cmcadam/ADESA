@@ -301,7 +301,8 @@ def backup_audit(session, ftp_client):
         lines = f.readlines()
         for i in range(0, len(lines)):
             if lines[i][:11] == 'Backup time':
-                backup_date = datetime.strptime(lines[i][13:][:9], '%m/%d/%Y')
+                print(lines[i])
+                backup_date = datetime.strptime(lines[i][13:][:10].strip(), '%m/%d/%Y')
                 current_date = datetime.now()
                 res = current_date - backup_date
                 if res.days >= 90:

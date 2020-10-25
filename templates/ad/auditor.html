@@ -5,6 +5,8 @@
 {% endblock %}
 
 {% block content %}
+    <h1>Audits</h1>
+    <hr>
     <div class="row">
         <div class="col-md-6">
             <div class="mb-3 card">
@@ -26,14 +28,6 @@
                             <td>{{ server.name }}</td>
 
                             <td>
-{#                                <form method="POST">#}
-{#                                    <label>Username</label>#}
-{#                                    <input type="text" name="username">#}
-{#                                    <label>Password</label>#}
-{#                                    <input type="password" name="password">#}
-{#                                    <button class="btn btn-primary" type="submit">Begin Audit</button>#}
-{#                                    <a class="btn btn-primary" href="{% url 'audit_details' server.id %}">Begin Audit</a>#}
-{#                                </form>#}
                                 <a class="btn btn-primary" href="{% url 'authorize_audit' server.id %}">Begin Audit</a>
                             </td>
                         </tr>
@@ -54,7 +48,7 @@
                     </tr>
                     {% if external_reports|length == 0 %}
                         <tr>
-                        <td colspan="4">You dont have any 3rd party reports!</td>
+                        <td colspan="2">You dont have any 3rd party reports!</td>
                         </tr>
                     {% else %}
                         {% for external_report in external_reports %}

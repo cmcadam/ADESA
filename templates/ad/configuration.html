@@ -27,32 +27,25 @@
             <tr>
                 <td>{{ server.name }}</td>
                 <td>{{ server.share_reports }}</td>
-                <td></td>
+                <td>{{ server.shared_with }}</td>
                 <td>{{ server.save_reports }}</td>
                 <td>{{ server.save_server_details }}</td>
                 <td>{{ server.server_address }}</td>
                 <td>{{ server.ssh_port }}</td>
-                <td><button class="btn btn-primary">Edit</button></td>
-                <td><button class="btn btn-danger">Remove</button></td>
+                <td><a class="btn btn-primary" href="{% url 'edit_server' server.id %}">Edit</a></td>
+                <td><a class="btn btn-danger" href="{% url 'remove_server' server.id %}">Remove</a></td>
 
             </tr>
             {% endfor %}
     </table>
-            <button><a href="{% url 'add_server' %}">Add Server</a></button>
+            <br>
+            <a class="btn btn-primary" href="{% url 'add_server' %}">Add Server</a>
         {% endif %}
 
     <form method="POST">
     {% csrf_token %}
-    {{ form }}
+    {{ form.as_p }}
     </form>
-
-{#    <form method="POST">#}
-{#    {% csrf_token %}#}
-{#        <label class="switch">#}
-{#            {{ custom_form.slider }}#}
-{#        <span class="slider round"></span>#}
-{#        </label>#}
-{#    </form>#}
 
 
 {% endblock %}
