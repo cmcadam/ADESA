@@ -301,7 +301,6 @@ def backup_audit(session, ftp_client):
         lines = f.readlines()
         for i in range(0, len(lines)):
             if lines[i][:11] == 'Backup time':
-                print(lines[i])
                 backup_date = datetime.strptime(lines[i][13:][:10].strip(), '%m/%d/%Y')
                 current_date = datetime.now()
                 res = current_date - backup_date
@@ -328,23 +327,20 @@ def backup_audit(session, ftp_client):
 
 
 def clean_up_files(ftp_client):
-    # remove all the files from the server
-    time.sleep(2)
-    ftp_client.remove('C:\\ADAudit\\ou_info.txt')
-    ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
-    ftp_client.remove('C:\\ADAudit\\proxy_info.txt')
-    ftp_client.remove('C:\\ADAudit\\application_patching_info.txt')
-    ftp_client.remove('C:\\ADAudit\\backup_files.txt')
-    ftp_client.remove('C:\\ADAudit\\backup_info.txt')
-    ftp_client.remove('C:\\ADAudit\\os_patching_info.txt')
-    ftp_client.remove('C:\\ADAudit\\vm_info.txt')
-    ftp_client.remove('C:\\ADAudit\\client_os_info.txt')
-    ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
-    ftp_client.remove('C:\\ADAudit\\object_linking_info.txt')
-    ftp_client.remove('C:\\AdAudit\\wsus_info.txt')
-    ftp_client.rmdir('C:\\ADAudit')
+    # ftp_client.remove('C:\\ADAudit\\ou_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
+    # ftp_client.remove('C:\\ADAudit\\proxy_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\application_patching_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\backup_files.txt')
+    # ftp_client.remove('C:\\ADAudit\\backup_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\os_patching_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\vm_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\client_os_info.txt')
+    # ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
+    # ftp_client.remove('C:\\ADAudit\\object_linking_info.txt')
+    # ftp_client.remove('C:\\AdAudit\\wsus_info.txt')
+    # ftp_client.rmdir('C:\\ADAudit')
 
-    time.sleep(2)
     # remove all the files from the server the script is running on
     os.remove('gpo_guids.txt')
     os.remove('proxy_info.txt')

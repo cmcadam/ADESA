@@ -54,7 +54,7 @@
                         {% for external_report in external_reports %}
                         <tr>
                             <td>{{ external_report.report.server.name }}</td>
-                            <td><button class="btn btn-primary">View</button></td>
+                            <td><a class="btn btn-primary" href="{% url 'generate_report' external_report.report.id %}">Download Report</a></td>
                         </tr>
                         {% endfor %}
                     {% endif %}

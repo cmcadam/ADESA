@@ -9,11 +9,10 @@ class Server(models.Model):
     name = models.CharField(max_length=50)
     server_address = models.CharField(max_length=20)
     ssh_port = models.IntegerField(default=22)
-    # server_username = models.CharField(max_length=50)
-    save_server_details = models.BooleanField(default=False)
     save_reports = models.BooleanField(default=True)
     share_reports = models.BooleanField(default=True)
     shared_with = models.ForeignKey(User, models.CASCADE, related_name='shared_with', null=True, blank=True)
+
 
 class Report(models.Model):
     server = models.ForeignKey(Server, on_delete=models.CASCADE)

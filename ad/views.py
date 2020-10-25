@@ -18,8 +18,6 @@ from scripts.reporter import get_ad_info
 def auditor(request):
     servers = Server.objects.filter(owner_id=request.user.id)
     external_reports = Audit.objects.filter(user_id=request.user.id)
-    for report in external_reports:
-        print(report.report_id)
     context = {
         'servers': servers,
         'external_reports': external_reports,

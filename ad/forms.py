@@ -7,7 +7,7 @@ class AddServerForm(ModelForm):
     # shared_with = forms.ModelChoiceField(queryset=User.objects.all().order_by('-email'))
     class Meta:
         model = Server
-        fields = ['name', 'save_reports', 'share_reports', 'shared_with', 'save_server_details', 'server_address', 'ssh_port']
+        fields = ['name', 'save_reports', 'share_reports', 'shared_with', 'server_address', 'ssh_port']
 
     def save(self, commit=True, user_id=None):
         server = super(AddServerForm, self).save(commit=False)
