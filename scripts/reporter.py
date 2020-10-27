@@ -327,19 +327,7 @@ def backup_audit(session, ftp_client):
 
 
 def clean_up_files(ftp_client):
-    # ftp_client.remove('C:\\ADAudit\\ou_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\GPOReport.xml')
-    # ftp_client.remove('C:\\ADAudit\\proxy_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\application_patching_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\backup_files.txt')
-    # ftp_client.remove('C:\\ADAudit\\backup_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\os_patching_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\vm_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\client_os_info.txt')
-    # ftp_client.remove('C:\\ADAudit\\domain_computer_list.txt')
-    # ftp_client.remove('C:\\ADAudit\\object_linking_info.txt')
-    # ftp_client.remove('C:\\AdAudit\\wsus_info.txt')
-    # ftp_client.rmdir('C:\\ADAudit')
+    # ftp_client.remove('C:\Audit')
 
     # remove all the files from the server the script is running on
     os.remove('gpo_guids.txt')

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block head_title %}
+    Send Results
+{% endblock %}
+
+{% block content %}
+
+
+    <h1>Send Results</h1>
+    <hr>
+    <p>Enter the email you wish to send this report to. WARNING: This is sensitive data be sure to send it to the correct person!</p>
+    <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button id="button" type="submit">Submit</button>
+    </form>
+{% endblock %}

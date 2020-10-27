@@ -1,20 +1,23 @@
-import json, io
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+import io
+from reportlab.lib.pagesizes import landscape
+from reportlab.platypus import SimpleDocTemplate, Table
 from reportlab.lib.units import inch
 from datetime import datetime, timezone
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import HttpResponseBadRequest, FileResponse
 from django.contrib.auth.models import User
+from django.core.mail import EmailMessage
+from django.contrib.auth.decorators import login_required
 
 from .models import Server, Audit, Report
-from .forms import AddServerForm, ServerCredentialsForm
+from .forms import AddServerForm, ServerCredentialsForm, EmailForm
 from .validators import validIPAddress
 
 from scripts.reporter import get_ad_info
 
 
+@login_required
 def auditor(request):
     servers = Server.objects.filter(owner_id=request.user.id)
     external_reports = Audit.objects.filter(user_id=request.user.id)
@@ -25,6 +28,7 @@ def auditor(request):
     return render(request, 'ad/auditor.html', context)
 
 
+@login_required
 def configuration(request):
     servers = Server.objects.filter(owner_id=request.user.id)
     context = {
@@ -33,6 +37,7 @@ def configuration(request):
     return render(request, 'ad/configuration.html', context)
 
 
+@login_required
 def dashboard(request):
     result = None
 
@@ -44,13 +49,8 @@ def dashboard(request):
     patching_os_score = 0
     mfa_score = 0
     backup_score = 0
-    ad_env_score = 0
-    days_since_last_audit = 0
-    ad_env_maturity = 0
-    report_id = 0
 
     servers = Server.objects.filter(owner_id=request.user.id)
-    print(servers)
     # Find the newest version of the report
     for server in servers:
         if Report.objects.filter(server_id=server.id).order_by('-date_created').first() is not None:
@@ -160,6 +160,7 @@ def dashboard(request):
         return render(request, 'ad/dashboard.html')
 
 
+@login_required
 def add_server(request):
     if request.method == 'POST':
         form = AddServerForm(request.POST)
@@ -176,6 +177,7 @@ def add_server(request):
     return render(request, 'ad/add_server.html', context)
 
 
+@login_required
 def audit_details(request, pk):
     server = Server.objects.get(id=pk)
 
@@ -183,6 +185,7 @@ def audit_details(request, pk):
     return render(request, 'ad/audit_details.html', context)
 
 
+@login_required
 def authorize_audit(request, pk):
     if request.method == 'POST':
         form = ServerCredentialsForm(request.POST)
@@ -191,24 +194,24 @@ def authorize_audit(request, pk):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
 
-            # try:
-            result_dict = get_ad_info(server.server_address, username, password)
+            try:
+                result_dict = get_ad_info(server.server_address, username, password)
 
-            report = Report.objects.create(
-                server_id=server.id,
-                json_report=result_dict,
-            )
-            if server.share_reports == 1:
-                auditor = User.objects.get(username=server.shared_with)
-                Audit.objects.create(
-                    report_id=report.id,
-                    user_id=auditor.id
-                 )
-            messages.success(request, 'Audit complete')
-            # except:
-            #     messages.error(request, 'Unable to audit server')
-            #     return HttpResponseBadRequest('This view can not handle method {0}'. \
-            #                            format(request.method), status=403)
+                report = Report.objects.create(
+                    server_id=server.id,
+                    json_report=result_dict,
+                )
+                if server.share_reports == 1:
+                    auditor = User.objects.get(username=server.shared_with)
+                    Audit.objects.create(
+                        report_id=report.id,
+                        user_id=auditor.id
+                     )
+                messages.success(request, 'Audit complete')
+            except:
+                messages.error(request, 'Unable to audit server')
+                return HttpResponseBadRequest('This view can not handle method {0}'. \
+                                       format(request.method), status=403)
 
     form = ServerCredentialsForm()
     context = {
@@ -218,7 +221,8 @@ def authorize_audit(request, pk):
     return render(request, 'ad/server_credentials.html', context)
 
 
-def generate_report(request, pk):
+@login_required
+def generate_report(request, pk, **kwargs):
 
     buffer = io.BytesIO()
     page_size = (15 * inch, 8 * inch)
@@ -228,6 +232,9 @@ def generate_report(request, pk):
 
     report = Report.objects.get(id=pk)
     tmp = []
+
+    # TODO Add summary to first page
+
     for category in report.json_report:
         tmp.append(category)
         data.append(tmp)
@@ -261,9 +268,23 @@ def generate_report(request, pk):
     elements.append(t)
     doc.build(elements)
     buffer.seek(0)
+    # Check if being called from the email to function
+    if 'email_to' in kwargs:
+        mail = EmailMessage(
+            'ADESA Server Report',
+            'Find attached server report for your viewing',
+            'chrismcadam21@gmail.com',
+            [kwargs['email_to']]
+        )
+        mail.attach('ADESA Report.pdf', buffer.getvalue(), 'application/pdf')
+        mail.send()
+
+        messages.success(request, 'Successfully sent email!')
+        return redirect('dashboard')
     return FileResponse(buffer, as_attachment=True, filename='report.pdf')
 
 
+@login_required
 def edit_server(request, pk):
     if request.method == 'POST':
         form = AddServerForm(request.POST)
@@ -279,6 +300,7 @@ def edit_server(request, pk):
     return render(request, 'ad/add_server.html', context)
 
 
+@login_required
 def remove_server(request, pk):
     if request.method == 'POST':
         Server.objects.get(id=pk).delete()
@@ -290,3 +312,17 @@ def remove_server(request, pk):
         'server': server
     }
     return render(request, 'ad/remove_server.html', context)
+
+
+@login_required
+def send_results(request, pk):
+    if request.method == 'POST':
+        form = EmailForm(request.POST)
+        if form.is_valid():
+            email_to = form.cleaned_data['email']
+            return generate_report(request, pk, email_to=email_to)
+    form = EmailForm()
+    context = {
+        'form': form
+    }
+    return render(request, 'ad/send_results.html', context)

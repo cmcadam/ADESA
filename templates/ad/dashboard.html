@@ -28,7 +28,8 @@
             </div>
         </div>
         <div class="text-centre card-footer">
-            <a href="{% url 'generate_report' report_id %}">Download Full Report</a>
+            <a class="btn btn-primary" href="{% url 'generate_report' report_id %}">Download Full Report</a>
+            <a class="btn btn-primary" href="{% url 'send_results' report_id %}">Send Report by Email</a>
         </div>
     </div>
     <hr>

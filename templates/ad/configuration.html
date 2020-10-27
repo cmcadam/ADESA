@@ -12,7 +12,6 @@
             <th>Share Report</th>
             <th>Shared With</th>
             <th>Save Reports</th>
-            <th>Save Server Details</th>
             <th>Server IP Address</th>
             <th>SSH Port </th>
             <th>Edit </th>
@@ -29,7 +28,6 @@
                 <td>{{ server.share_reports }}</td>
                 <td>{{ server.shared_with }}</td>
                 <td>{{ server.save_reports }}</td>
-                <td>{{ server.save_server_details }}</td>
                 <td>{{ server.server_address }}</td>
                 <td>{{ server.ssh_port }}</td>
                 <td><a class="btn btn-primary" href="{% url 'edit_server' server.id %}">Edit</a></td>
