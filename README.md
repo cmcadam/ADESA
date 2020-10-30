@@ -23,6 +23,18 @@ To start the server, enter the following command.
 python3 /path/to/ADESA/manage.py runserver
 ```
 
+To enable email notification functions, at the bottom of the settings file update the user and password fields to your own.
+```python
+# EMAIL SETTINGS
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'YOUR EMAIL'
+EMAIL_HOST_PASSWORD = 'YOUR PASSWORD'
+```
+
 ## Notes
 
 The application relies on ssh to audit the Windows Servers that it connects to. Ensure that your Windows Server/Active Directory instance allows ssh access.
