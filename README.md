@@ -29,4 +29,4 @@ The application relies on ssh to audit the Windows Servers that it connects to. 
 
 This application was developed with python v3.7 and Windows Server 2012. 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](https://github.com/cmcadam/ADESA/blob/master/LICENSE)
