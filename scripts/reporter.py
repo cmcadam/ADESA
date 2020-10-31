@@ -12,8 +12,6 @@ gpo_dict = {}
 
 # Done
 def application_control_audit(root):
-    print('Application Control Report')
-
     # create the flags for the file extensions
     exe_flag = 0
     ps1_flag = 0
@@ -64,7 +62,6 @@ def application_control_audit(root):
 
 # Done
 def office_macros_audit(root):
-    print('Office macro report')
     # user based policies at root[9][3], iterate on the 4th layer for GPO details
     if int(root[9][0].text) == 0:
         print('No user policies applied in this GPO')
@@ -126,7 +123,6 @@ def application_hardening_audit(root, session, ftp_client):
 
 # Done
 def admin_privileges_audit(root, session, ftp_client):
-    print('Admin Privileges Audit')
     for name in root.findall('.//{http://www.microsoft.com/GroupPolicy/Settings}Computer/'
                              '{http://www.microsoft.com/GroupPolicy/Settings}ExtensionData/'
                              '{http://www.microsoft.com/GroupPolicy/Settings}Extension/'
@@ -156,8 +152,6 @@ def admin_privileges_audit(root, session, ftp_client):
 
 # Done
 def patch_os_audit(session, ftp_client):
-    print('Patch OS Audit')
-
     client_os_flag = 1
     server_os_flag = 1
 
@@ -209,7 +203,6 @@ def patch_os_audit(session, ftp_client):
 
 # Done
 def mfa_audit(root):
-    print('mfa report')
     # computer based policies at root[8][3], iterate on the 4th layer for GPO details
     if int(root[8][0].text) == 0:
         print('No user policies applied in this GPO')
@@ -242,8 +235,6 @@ def mfa_audit(root):
 
 # Done
 def patch_application_audit(session, ftp_client):
-    print('Patch Applications Audit')
-
     # Run powershell scripts on server
     execute_command('powershell Get-WsusServer ^| Out-File C:\\ADAudit\\wsus_info.txt', session)
     execute_command('powershell (Get-ADComputer -Filter *).Name ^| Out-File C:\\ADAudit\\domain_computer_list.txt', session)
@@ -281,8 +272,6 @@ def patch_application_audit(session, ftp_client):
 
 # Done
 def backup_audit(session, ftp_client):
-    print('Backup Audit')
-
     # Get all backup information on the server
     execute_command('powershell WBAdmin ENABLE BACKUP ^| Out-File C:\\ADAudit\\backup_info.txt', session)
     getfile('C:\\ADAudit\\backup_info.txt', 'backup_info.txt', session, ftp_client)

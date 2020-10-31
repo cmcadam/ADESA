@@ -35,6 +35,8 @@ EMAIL_HOST_USER = 'YOUR EMAIL'
 EMAIL_HOST_PASSWORD = 'YOUR PASSWORD'
 ```
 
+In production be sure to hide the secret key from the settings file!
+
 ## Notes
 
 The application relies on ssh to audit the Windows Servers that it connects to. Ensure that your Windows Server/Active Directory instance allows ssh access.
